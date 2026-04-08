@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 export default function ExperienceDetails() {
   const { id } = useParams();
+  const [guests, setGuests] = useState(2);
 
   return (
     <>
@@ -59,14 +61,24 @@ export default function ExperienceDetails() {
           <section className="space-y-6">
             <div className="flex justify-between items-end">
               <h2 className="font-headline text-3xl font-bold">The Terrain</h2>
-              <span className="text-primary font-bold flex items-center gap-1 cursor-pointer">View full map <span className="material-symbols-outlined text-sm">north_east</span></span>
+              <a href="https://maps.google.com/maps?q=Sidi+Bou+Said,Tunisia" target="_blank" rel="noopener noreferrer" className="text-primary font-bold flex items-center gap-1 cursor-pointer hover:underline">
+                View full map <span className="material-symbols-outlined text-sm">north_east</span>
+              </a>
             </div>
-            <div className="h-80 w-full rounded-3xl overflow-hidden bg-surface-container-high relative">
-              <img className="w-full h-full object-cover opacity-50 grayscale" data-alt="Stylized map showing coastal roads and village layout" src="https://external-iad3-2.xx.fbcdn.net/static_map.php?region=US&v=2065&ccb=4-4&size=411x205&center=36.8028%2C10.1797&language=en_US&_nc_client_caller=FacebookMapProvider.php&_nc_client_id=fb_profile_hub_page&theme=default" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
+            <div className="h-80 w-full rounded-3xl overflow-hidden bg-surface-container-high relative group">
+              <iframe 
+                title="Sidi Bou Said Interactive Map"
+                className="w-full h-full object-cover opacity-80 grayscale transition-opacity duration-300 hover:opacity-100 hover:grayscale-0 relative z-0"
+                src="https://maps.google.com/maps?q=Sidi+Bou+Said,Tunisia&t=&z=14&ie=UTF8&iwloc=&output=embed"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              ></iframe>
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none z-10 transition-opacity duration-300 group-hover:opacity-0 hidden md:flex">
                 <div className="w-4 h-4 bg-primary rounded-full animate-ping absolute"></div>
                 <div className="w-4 h-4 bg-primary rounded-full relative shadow-lg border-2 border-white"></div>
-                <span className="mt-2 bg-white px-3 py-1 rounded-full text-xs font-bold shadow-md">Meeting Point: Dar Zarrouk</span>
+                <span className="mt-2 bg-white px-3 py-1 rounded-full text-xs font-bold shadow-md text-on-surface">Meeting Point: Dar Zarrouk</span>
               </div>
             </div>
           </section>
@@ -94,7 +106,11 @@ export default function ExperienceDetails() {
             <div className="space-y-6">
               <div className="pb-6 border-b border-outline-variant/30">
                 <div className="flex items-center gap-4 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-surface-container-highest"></div>
+                  <div className="w-10 h-10 rounded-full bg-surface-container-highest">            
+                    <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 shadow-xl">
+                      <img alt="Host Profile Photo" className="w-full h-full object-cover" src="https://www.shutterstock.com/image-photo/beauty-charisma-head-shot-portrait-600nw-2647728057.jpg" />
+                    </div>
+                  </div>
                   <div>
                     <h4 className="font-bold">Elena Rodriguez</h4>
                     <div className="flex text-amber-500 scale-75 origin-left">
@@ -126,19 +142,36 @@ export default function ExperienceDetails() {
                 <div className="space-y-2 text-left">
                   <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Choose Date</label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-primary">calendar_today</span>
-                    <input className="w-full pl-12 pr-4 py-4 bg-surface-container-low rounded-2xl border-none focus:ring-2 focus:ring-primary/20 font-medium" type="text" defaultValue="Oct 24, 2024" />
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-primary pointer-events-none">calendar_today</span>
+                    <input className="w-full pl-12 pr-4 py-4 bg-surface-container-low rounded-2xl border-none focus:ring-2 focus:ring-primary/20 font-medium text-on-surface" type="date" defaultValue="2024-10-24" />
                   </div>
                 </div>
                 <div className="space-y-2 text-left">
                   <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Guests</label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-primary">group</span>
-                    <select className="w-full pl-12 pr-4 py-4 bg-surface-container-low rounded-2xl border-none focus:ring-2 focus:ring-primary/20 font-medium appearance-none">
-                      <option>2 Explorers</option>
-                      <option>3 Explorers</option>
-                      <option>4 Explorers</option>
-                    </select>
+                  <div className="flex items-center justify-between bg-surface-container-low rounded-2xl p-3">
+                    <div className="flex items-center gap-3 ml-1 text-primary">
+                      <span className="material-symbols-outlined">group</span>
+                      <span className="font-medium text-on-surface">{guests} Explorer{guests !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="flex items-center gap-3 border border-outline/20 rounded-full px-2 py-1 bg-surface">
+                      <button 
+                        type="button"
+                        onClick={() => setGuests(Math.max(1, guests - 1))}
+                        className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors text-primary shadow-sm disabled:opacity-50"
+                        disabled={guests <= 1}
+                      >
+                        <span className="material-symbols-outlined text-[1rem]">remove</span>
+                      </button>
+                      <span className="font-bold w-4 text-center">{guests}</span>
+                      <button 
+                        type="button"
+                        onClick={() => setGuests(Math.min(6, guests + 1))}
+                        className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors text-primary shadow-sm disabled:opacity-50"
+                        disabled={guests >= 6}
+                      >
+                        <span className="material-symbols-outlined text-[1rem]">add</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
                 <Link to={`/booking/${id || 1}`}>
