@@ -1,0 +1,123 @@
+import { Link } from 'react-router-dom';
+
+export default function HomePage() {
+  return (
+    <>
+      <header className="relative min-h-screen flex items-center pt-20 px-6 md:px-12 overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <img alt="Sidi Bou Said Tunisia" className="w-full h-full object-cover" data-alt="Cinematic wide shot of the iconic blue and white architecture of Sidi Bou Said overlooking the turquoise Mediterranean Sea at sunrise." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9UzgJ1Wy1bGFw-4mkiM6lBcYceyIyDcJFIAFgvXtDS-8fq66Zqmo09IEyG9u8mx_YaWSHVZQdU7E_lwfMElT4f9MKbmW6ZtlChrMGx1RDqSZzJGZpdM6vlNij5qVHQ1knSgeRPZXXbL4tcZkigg0ekLQX7QXT8l4iesQBVC8dm2mLAnbuAS9k6M4TBc1elcwImyNzHvvgT07FHxu4laRF9OtjbcuzUg4jcd-_wu8wtvYiRoTPlwGIXoJNkxqJlbQto1PkIALFuOs" />
+          <div className="absolute inset-0 bg-gradient-to-r from-surface via-surface/40 to-transparent"></div>
+        </div>
+        <div className="relative z-10 max-w-4xl">
+          <h1 className="font-headline text-6xl md:text-8xl text-primary font-bold leading-tight mb-6">
+            Unveil the Heart <br /><span className="italic text-tertiary">of Tunisia</span>
+          </h1>
+          <p className="text-xl md:text-2xl text-on-surface-variant max-w-2xl mb-10 leading-relaxed">
+            Discover authentic local experiences and connect with the soul of the Mediterranean through our curated digital journey.
+          </p>
+          <div className="flex flex-wrap gap-4">
+            <Link to="/explore">
+              <button className="bg-gradient-to-r from-primary to-primary-container text-on-primary px-10 py-4 rounded-full text-lg font-bold shadow-xl flex items-center gap-2 hover:scale-105 duration-200">
+                Start Exploring <span className="material-symbols-outlined">arrow_forward</span>
+              </button>
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      <section className="py-32 px-6 md:px-12 relative arabesque-pattern">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-20 items-center">
+          <div className="w-full md:w-1/2 relative">
+            <div className="bg-surface-container-high aspect-[4/5] rounded-[4rem] overflow-hidden rotate-2 shadow-2xl relative z-20">
+              <img alt="Tunisian Artisan" className="w-full h-full object-cover" data-alt="A local Tunisian artisan delicately painting ceramic tiles in a sunlit courtyard filled with jasmine plants and traditional architecture." src="https://wildyness.com/uploads/0000/145/2023/07/31/carthage-guide-complete.png" />
+            </div>
+            <div className="absolute -top-10 -left-10 w-48 h-48 bg-secondary-fixed rounded-full -z-10 mix-blend-multiply opacity-50 blur-3xl"></div>
+            <div className="absolute -bottom-10 -right-10 w-72 h-72 bg-tertiary-fixed rounded-full -z-10 mix-blend-multiply opacity-40 blur-3xl"></div>
+          </div>
+          <div className="w-full md:w-1/2 space-y-8">
+            <span className="text-tertiary font-bold tracking-[0.2em] uppercase text-sm">Authenticity Redefined</span>
+            <h2 className="font-headline text-5xl text-primary font-bold leading-tight">A Bridge Between Worlds</h2>
+            <p className="text-on-surface-variant text-lg leading-relaxed">
+              Our geolocation-based platform doesn't just show you places; it introduces you to people. Using high-precision location mapping, we connect you with local "Curators"—citizens who open their homes and heritage to those seeking more than just a souvenir.
+            </p>
+            <ul className="space-y-4">
+              <li className="flex items-start gap-4">
+                <div className="p-2 bg-primary/10 rounded-xl text-primary">
+                  <span className="material-symbols-outlined max-w-fit" data-weight="fill">location_on</span>
+                </div>
+                <div>
+                  <h4 className="font-bold text-lg">Hyper-Local Discovery</h4>
+                  <p className="text-on-surface-variant">Find hidden gems within walking distance of your current stay.</p>
+                </div>
+              </li>
+              <li className="flex items-start gap-4">
+                <div className="p-2 bg-primary/10 rounded-xl text-primary">
+                  <span className="material-symbols-outlined">diversity_3</span>
+                </div>
+                <div>
+                  <h4 className="font-bold text-lg">Direct Citizen Impact</h4>
+                  <p className="text-on-surface-variant">Every experience directly supports the local economy and preservation efforts.</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-24 bg-surface-container-low px-6 md:px-12">
+        <div className="max-w-7xl mx-auto mb-16 flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <h2 className="font-headline text-5xl text-primary font-bold">Curated Portals</h2>
+            <p className="text-on-surface-variant text-xl mt-4 max-w-xl">Choose your path through the diverse tapestry of Tunisian life.</p>
+          </div>
+          <Link to="/explore" className="text-primary font-bold flex items-center gap-2 hover:underline">
+            Explore all paths <span className="material-symbols-outlined">north_east</span>
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 max-w-7xl mx-auto h-auto md:h-[800px]">
+          <div className="md:col-span-7 group relative rounded-3xl overflow-hidden shadow-lg transition-transform hover:scale-[1.01] cursor-pointer">
+            <Link to="/explore?category=workshops">
+              <img alt="Pottery Workshop" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://www.figsandjasmine.com/cdn/shop/articles/Tunisian_Ceramic_Blog-3.jpg?v=1702514603&width=1920" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+              <div className="absolute bottom-10 left-10 text-white">
+                <span className="bg-tertiary text-[10px] uppercase font-bold tracking-widest px-3 py-1 rounded-full mb-3 inline-block">Hands-on</span>
+                <h3 className="text-4xl font-headline font-bold">Artisanal Workshops</h3>
+                <p className="text-white/80 mt-2 max-w-xs">Master the ancient arts of weaving, pottery, and calligraphy.</p>
+              </div>
+            </Link>
+          </div>
+          <div className="md:col-span-5 group relative rounded-3xl overflow-hidden shadow-lg transition-transform hover:scale-[1.01] cursor-pointer">
+            <Link to="/explore?category=stays">
+              <img alt="Riad Courtyard" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://www.bigworldsmallpockets.com/wp-content/uploads/2023/07/Tunisia-Sidi-Bou-Said-Me-in-Doorway.jpg" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+              <div className="absolute bottom-10 left-10 text-white">
+                <h3 className="text-3xl font-headline font-bold">Heritage Stays</h3>
+                <p className="text-white/80 mt-2">Sleep within the walls of history.</p>
+              </div>
+            </Link>
+          </div>
+          <div className="md:col-span-5 group relative rounded-3xl overflow-hidden shadow-lg transition-transform hover:scale-[1.01] cursor-pointer">
+            <Link to="/explore?category=culinary">
+              <img alt="Tunisian Spices" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAf3cEL_W_2KcjsRK-bRxvs9FgGHNRYxXEuyNOXVok5IUlnHpJ0lP7SqEmpwZC7szLFw1p2Whb3V9zCce2hmZX_fkg7maRLhK1uurHMA6TUCnhJ_lXo97EE_TclofQXCstFWqDGSH1wN5Lgb90zDXZhE6FND-AvMBDRrUjHqWlGjVIQY57iz3-EpHc2oetxJ89b5OplH-tqDgl0gcmtNKF2hsf4ldCeoKFV4sFhF9e7shy8NzF9c3HIxpaGMxEQ8Z-r-fMRXjoBL9A" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+              <div className="absolute bottom-10 left-10 text-white">
+                <h3 className="text-3xl font-headline font-bold">Culinary Secrets</h3>
+                <p className="text-white/80 mt-2">Private kitchen experiences with family matriarchs.</p>
+              </div>
+            </Link>
+          </div>
+          <div className="md:col-span-7 group relative rounded-3xl overflow-hidden shadow-lg transition-transform hover:scale-[1.01] cursor-pointer">
+            <Link to="/explore?category=desert">
+              <img alt="Sahara Desert" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCwgf9Lh-j_Cval-WlNx-04AKpLwJpLuEsJ0MhsauFfZv0WJ1Y3EU59z239av_kWCOk30Jct9jEu60fvmXHU_5Bha5tUhW7lcqxHuY8CjbeSh-kW8YRrl46vgkkm2k6ixxWcq45xvpx2xr8FsAuKKBFVuEwQxzZXJcmoxgE6YYKJxOCKrHRNmagImZSar59lu9g90QE9fobBnn-yv_tPYOGO9VKNivzu9KaF0s0qizyPr7gQiUCUQ22h8DWRU-nmBoHJioEwa3AHjw" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+              <div className="absolute bottom-10 left-10 text-white">
+                <h3 className="text-4xl font-headline font-bold">Desert Expeditions</h3>
+                <p className="text-white/80 mt-2">Navigate the golden silence of the Sahara.</p>
+              </div>
+            </Link>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
