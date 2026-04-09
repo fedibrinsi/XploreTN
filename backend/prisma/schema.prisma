@@ -11,8 +11,17 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  CITOYEN
+  TOURISTE
+}
+
 model User {
-  id    Int    @id @default(autoincrement())
-  name  String
-  email String @unique
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  fullName  String
+  createdAt DateTime @default(now())
+  image     String
+  role      Role     @default(TOURISTE)
 }
