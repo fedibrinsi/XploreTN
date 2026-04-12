@@ -5,12 +5,68 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  //url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int        @id @default(autoincrement())
+  email     String     @unique
+  createdAt DateTime   @default(now())
+  fullName  String
+  image     String?
+  password  String
+  role      Role       @default(TOURISTE)
+  bio       String?
+  Activity  Activity[]
+  housings  Housing[]
+}
+
+model Activity {
+  id          Int              @id @default(autoincrement())
+  title       String
+  description String
+  price       Float
+  date        DateTime
+  location    String
+  latitude    Float
+  longitude   Float
+  images      String[]
+  status      ActivityStatus   @default(APPROVED)
+  capacity    Int
+  category    ActivityCategory
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime
+  creatorId   Int
+  User        User             @relation(fields: [creatorId], references: [id])
+
+  @@index([category])
+  @@index([creatorId])
+  @@index([date])
+  @@index([location])
+  @@index([status])
 }
 
 enum Role {
   CITOYEN
   TOURISTE
+}
+
+enum ActivityCategory {
+  ART_HERITAGE
+  GASTRONOMY
+  COASTAL_ESCAPE
+  HISTORICAL_TOUR
+  ARTISAN_WORKSHOP
+  DESERT_EXPEDITION
+  NATURE_ADVENTURE
+  CULTURAL_EVENT
+  WELLNESS
+  OTHER
+}
+
+enum ActivityStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum HousingType {
@@ -22,19 +78,6 @@ enum HousingType {
   GUESTHOUSE
   RIAD
   CHALET
-}
-
-model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  fullName  String
-  createdAt DateTime @default(now())
-  image     String?
-  role      Role     @default(TOURISTE)
-  bio       String?
-
-  housings Housing[]
 }
 
 model Housing {
@@ -55,4 +98,41 @@ model Housing {
 
   ownerId Int
   owner   User @relation(fields: [ownerId], references: [id])
+}
+
+model Place {
+  id           String        @id @default(cuid())
+  name         String
+  category     PlaceCategory
+  address      String
+  city         String
+  latitude     Float
+  longitude    Float
+  rating       Float?
+  reviewCount  Int?
+  isOpen       Boolean?
+  openingHours Json? // e.g. { mon: "08:00-22:00", tue: "08:00-22:00", ... }
+  phone        String?
+  website      String?
+  tags         String[]
+  images       String[]
+  description  String?
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([latitude, longitude]) // critical for bounding-box queries
+  @@index([category])
+  @@index([city])
+}
+
+enum PlaceCategory {
+  RESTAURANT
+  CAFE
+  TEA_HOUSE
+  SHOP
+  BEAUTY_SALON
+  PHARMACY
+  BAKERY
+  MARKET
 }

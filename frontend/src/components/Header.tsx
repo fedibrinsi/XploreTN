@@ -9,7 +9,7 @@ export default function Header() {
   const profileTarget = token ? "/profile" : "/auth";
 
   const housingTarget =
-    user?.role === "TOURIST" ? "/housingSearch" : "/housing";
+    user?.role === "TOURISTE" ? "/housingSearch" : "/housing";
 
   const avatarSrc = user?.image
     ? user.image.startsWith("http")

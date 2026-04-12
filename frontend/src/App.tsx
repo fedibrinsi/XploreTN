@@ -10,6 +10,8 @@ import CuratorDashboard from "./pages/CuratorDashboard";
 import MessagingInterface from "./pages/MessagingInterface";
 import AuthPage from "./pages/AuthPage";
 import HousingPage from "./pages/Housing";
+import HousingSearchPage from "./pages/HousingSearch";
+import ExplorePage from "./pages/ExplorePage";
 
 function App() {
   return (
@@ -25,6 +27,8 @@ function App() {
           <Route path="dashboard" element={<CuratorDashboard />} />
           <Route path="auth" element={<AuthPage />} />
           <Route path="housing" element={<HousingPage />} />
+          <Route path="housingSearch" element={<HousingSearchPage />} />
+          <Route path="/explorePage" element={<ExplorePage />} />
         </Route>
         <Route path="messages" element={<MessagingInterface />} />
       </Routes>
