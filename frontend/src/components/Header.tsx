@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { toImageUrl } from "../utils/imageUrl";
 
 const BACKEND_URL = "http://localhost:5000";
 
@@ -11,11 +12,8 @@ export default function Header() {
   const housingTarget =
     user?.role === "TOURISTE" ? "/housingSearch" : "/housing";
 
-  const avatarSrc = user?.image
-    ? user.image.startsWith("http")
-      ? user.image
-      : `${BACKEND_URL}${user.image}`
-    : "https://media.istockphoto.com/id/2171382633/vector/user-profile-icon-anonymous-person-symbol-blank-avatar-graphic-vector-illustration.jpg?s=612x612&w=0&k=20&c=ZwOF6NfOR0zhYC44xOX06ryIPAUhDvAajrPsaZ6v1-w=";
+  const avatarSrc = toImageUrl(user?.image);
+  console.log("Avatar URL:", avatarSrc);
 
   return (
     <nav className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-md shadow-sm shadow-[#1b1c1a]/5 flex justify-between items-center px-8 h-20 max-w-full mx-auto">
@@ -48,7 +46,7 @@ export default function Header() {
           Housing
         </Link>
         <Link
-          to="/messages"
+          to="/messaging"
           className="text-slate-600 hover:text-[#1D4F91] font-headline font-bold text-lg transition-all duration-300"
         >
           Messaging

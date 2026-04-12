@@ -1,28 +1,16 @@
-// backend/src/middleware/auth.ts
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import prisma from "../prisma";
 
 export interface AuthRequest extends Request {
-  user?: any;
+  user: {
+    userId: number;
+    email: string;
+  };
 }
 
-export const getUserFromToken = () => {
-  const token = localStorage.getItem("token");
-  if (!token) return null;
-
-  try {
-    // Parse the JWT token to get user info
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload;
-  } catch (error) {
-    console.error("Error parsing token:", error);
-    return null;
-  }
-};
-
 export const authenticateJWT = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
@@ -35,11 +23,18 @@ export const authenticateJWT = async (
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET!) as {
       id: number;
+      email?: string;
     };
+
     const user = await prisma.user.findUnique({ where: { id: payload.id } });
     if (!user) return res.status(401).json({ error: "User not found" });
 
-    req.user = user;
+    // ✅ Mapper vers userId pour être cohérent avec les routes
+    (req as AuthRequest).user = {
+      userId: user.id,
+      email: user.email,
+    };
+
     next();
   } catch (err) {
     return res.status(403).json({ error: "Invalid token" });

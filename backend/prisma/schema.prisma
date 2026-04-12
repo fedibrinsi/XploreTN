@@ -8,16 +8,18 @@ datasource db {
 }
 
 model User {
-  id        Int        @id @default(autoincrement())
-  email     String     @unique
-  createdAt DateTime   @default(now())
-  fullName  String
-  image     String?
-  password  String
-  role      Role       @default(TOURISTE)
-  bio       String?
-  Activity  Activity[]
-  housings  Housing[]
+  id                       Int                       @id @default(autoincrement())
+  email                    String                    @unique
+  createdAt                DateTime                  @default(now())
+  fullName                 String
+  image                    String?
+  password                 String
+  role                     Role                      @default(TOURISTE)
+  bio                      String?
+  Activity                 Activity[]
+  housings                 Housing[]
+  conversationParticipants ConversationParticipant[]
+  messages                 Message[]
 }
 
 model Activity {
@@ -133,4 +135,42 @@ enum PlaceCategory {
   PHARMACY
   BAKERY
   MARKET
+}
+
+model Conversation {
+  id        String   @id @default(uuid())
+  type      String // "dm" ou "group"
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  participants ConversationParticipant[]
+  messages     Message[]
+}
+
+model ConversationParticipant {
+  conversationId String
+  userId         Int
+  joinedAt       DateTime  @default(now())
+  lastReadAt     DateTime?
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([conversationId, userId])
+}
+
+model Message {
+  id             String @id @default(uuid())
+  conversationId String
+  senderId       Int
+  text           String
+
+  createdAt DateTime @default(now())
+
+  // Tableau des IDs utilisateurs ayant lu le message
+  readBy String[]
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
 }
