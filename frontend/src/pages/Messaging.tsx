@@ -193,6 +193,8 @@ function NewDMModal({
   };
 
   return (
+    <>
+    <Header />
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
       style={{ background: "rgba(20,15,5,0.6)", backdropFilter: "blur(6px)" }}
@@ -232,8 +234,7 @@ function NewDMModal({
               value={query}
               onChange={(e) => handleSearch(e.target.value)}
               placeholder="Search by name..."
-              className="w-full bg-surface-container-low rounded-xl pl-10 pr-4 py-3 text-sm border-none focus:ring-2 focus:ring-primary/20 focus:outline-none placeholder:text-outline-variant"
-            />
+              className="w-full bg-surface-container-low rounded-xl pl-10 pr-4 py-3 text-sm border-none focus:ring-2 focus:ring-primary/20 focus:outline-none placeholder:text-outline-variant" />
             {loading && (
               <div className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 border-outline-variant border-t-primary animate-spin" />
             )}
@@ -271,8 +272,7 @@ function NewDMModal({
                       <img
                         src={toImageUrl(user.image)}
                         alt={user.fullName}
-                        className="w-full h-full rounded-full object-cover"
-                      />
+                        className="w-full h-full rounded-full object-cover" />
                     ) : (
                       <div
                         className="w-full h-full rounded-full flex items-center justify-center text-white text-sm font-bold"
@@ -299,7 +299,7 @@ function NewDMModal({
           )}
         </div>
       </div>
-    </div>
+    </div></>
   );
 }
 

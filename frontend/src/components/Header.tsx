@@ -19,28 +19,28 @@ export default function Header() {
       </div>
       <div className="hidden md:flex items-center gap-8">
         <Link
-          to="/explore"
-          className="text-slate-600 hover:text-[#1D4F91] font-headline font-bold text-lg transition-all duration-300"
-        >
-          Activities
-        </Link>
-        <Link
           to="/explorePage"
           className="text-slate-600 hover:text-[#1D4F91] font-headline font-bold text-lg transition-all duration-300"
         >
           Explore
         </Link>
         <Link
-          to="/dashboard"
+          to="/explore"
           className="text-slate-600 hover:text-[#1D4F91] font-headline font-bold text-lg transition-all duration-300"
         >
-          Dashboard
+          Activities
         </Link>
         <Link
           to={housingTarget}
           className="text-slate-600 hover:text-[#1D4F91] font-headline font-bold text-lg transition-all duration-300"
         >
           Housing
+        </Link>
+        <Link
+          to="/dashboard"
+          className="text-slate-600 hover:text-[#1D4F91] font-headline font-bold text-lg transition-all duration-300"
+        >
+          Dashboard
         </Link>
         <Link
           to="/messaging"
