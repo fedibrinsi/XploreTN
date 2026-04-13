@@ -13,7 +13,6 @@ export default function Header() {
     user?.role === "TOURISTE" ? "/housingSearch" : "/housing";
 
   const avatarSrc = toImageUrl(user?.image);
-  console.log("Avatar URL:", avatarSrc);
 
   return (
     <nav className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-md shadow-sm shadow-[#1b1c1a]/5 flex justify-between items-center px-8 h-20 max-w-full mx-auto">

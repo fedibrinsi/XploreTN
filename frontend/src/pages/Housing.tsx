@@ -346,7 +346,7 @@ function HousingCard({
   const resolveImage = (src: string) =>
     src.startsWith("http") || src.startsWith("data:")
       ? src
-      : `${BASE_URL}${src}`;
+      : `${BACKEND_URL}${src}`;
 
   return (
     <article
@@ -585,11 +585,7 @@ function ImageUploader({
                 key={i}
                 className="relative group aspect-square rounded-xl overflow-hidden shadow-md"
               >
-                <img
-                  src={src.startsWith("http") ? src : `${BASE_URL}${src}`}
-                  alt=""
-                  className="w-full h-full object-cover"
-                />
+                <img src={src} alt="" className="w-full h-full object-cover" />
                 <button
                   type="button"
                   onClick={() => onRemoveExisting(src)}

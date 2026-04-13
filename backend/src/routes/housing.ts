@@ -1,9 +1,8 @@
 import express from "express";
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import multer from "multer";
-import path from "path";
-import fs from "fs";
+import { v2 as cloudinary } from "cloudinary";
+import { upload } from "../cloudinary"; // ton config cloudinary
 import prisma from "../prisma";
 
 const router = express.Router();
@@ -32,32 +31,26 @@ function authMiddleware(req: Request, res: Response, next: Function) {
   }
 }
 
-// ─── Multer config (housing images) ───────────────────────────────────────────
-const uploadDir = path.join(process.cwd(), "uploads", "housing");
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+// ─── Cloudinary helper ─────────────────────────────────────────────────────────
+function extractPublicId(url: string): string | null {
+  const match = url.match(/\/upload\/(?:v\d+\/)?(.+?)(?:\.[^.]+)?$/);
+  return match ? match[1] : null;
+}
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, uploadDir),
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(
-      null,
-      `housing_${Date.now()}_${Math.random().toString(36).slice(2)}${ext}`,
-    );
-  },
-});
+async function deleteCloudinaryImages(urls: string[]): Promise<void> {
+  await Promise.allSettled(
+    urls
+      .filter((url) => url.includes("res.cloudinary.com"))
+      .map((url) => {
+        const publicId = extractPublicId(url);
+        return publicId
+          ? cloudinary.uploader.destroy(publicId)
+          : Promise.resolve();
+      }),
+  );
+}
 
-const upload = multer({
-  storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
-  fileFilter: (_req, file, cb) => {
-    const allowed = ["image/jpeg", "image/png", "image/webp"];
-    if (allowed.includes(file.mimetype)) cb(null, true);
-    else cb(new Error("Seuls les formats JPG, PNG et WEBP sont acceptés."));
-  },
-});
-
-// ─── Validation helper ─────────────────────────────────────────────────────────
+// ─── Validation ────────────────────────────────────────────────────────────────
 const VALID_HOUSING_TYPES = [
   "APARTMENT",
   "VILLA",
@@ -83,8 +76,6 @@ interface HousingBody {
   maxStayDays: number;
 }
 
-// ─── req.body field extractor ─────────────────────────────────────────────────
-// Express body-parser can return string | string[] — always take the first value
 function str(val: unknown): string {
   if (Array.isArray(val)) return String(val[0] ?? "");
   return String(val ?? "");
@@ -102,63 +93,52 @@ function validateHousingBody(body: Partial<HousingBody>): string | null {
     maxTourists,
     maxStayDays,
   } = body;
-
   if (!title?.trim() || title.trim().length < 5 || title.trim().length > 100)
     return "Le titre doit comporter entre 5 et 100 caractères.";
-
   if (
     !description?.trim() ||
     description.trim().length < 20 ||
     description.trim().length > 1000
   )
     return "La description doit comporter entre 20 et 1000 caractères.";
-
   if (!location?.trim() || location.trim().length < 3)
     return "Veuillez fournir une localisation valide.";
-
   if (!type || !VALID_HOUSING_TYPES.includes(type))
     return "Type de logement invalide.";
-
   if (
     !Number.isInteger(Number(floors)) ||
     Number(floors) < 1 ||
     Number(floors) > 10
   )
     return "Le nombre d'étages doit être entre 1 et 10.";
-
   if (
     !Number.isInteger(Number(rooms)) ||
     Number(rooms) < 1 ||
     Number(rooms) > 20
   )
     return "Le nombre de chambres doit être entre 1 et 20.";
-
   if (
     !Number.isInteger(Number(familyMembers)) ||
     Number(familyMembers) < 1 ||
     Number(familyMembers) > 15
   )
     return "Le nombre de membres de la famille doit être entre 1 et 15.";
-
   if (
     !Number.isInteger(Number(maxTourists)) ||
     Number(maxTourists) < 1 ||
     Number(maxTourists) > 20
   )
     return "Le nombre max de touristes doit être entre 1 et 20.";
-
   if (
     !Number.isInteger(Number(maxStayDays)) ||
     Number(maxStayDays) < 1 ||
     Number(maxStayDays) > 365
   )
     return "La durée max de séjour doit être entre 1 et 365 jours.";
-
   return null;
 }
 
-// ─── GET /api/housings/view ─────────────────────────────────────────────────────────
-// Returns all housings belonging to the authenticated user
+// ─── GET /api/housings/view ────────────────────────────────────────────────────
 router.get("/view", authMiddleware, async (req: Request, res: Response) => {
   try {
     const ownerId = (req as any).user.id;
@@ -178,14 +158,11 @@ router.get("/:id", authMiddleware, async (req: Request, res: Response) => {
   try {
     const ownerId = (req as any).user.id;
     const id = str(req.params.id);
-
     const housing = await prisma.housing.findUnique({ where: { id } });
     if (!housing)
       return res.status(404).json({ message: "Logement introuvable." });
-
     if (housing.ownerId !== ownerId)
       return res.status(403).json({ message: "Accès refusé." });
-
     return res.json(housing);
   } catch (error) {
     console.error("Get housing error:", error);
@@ -193,8 +170,7 @@ router.get("/:id", authMiddleware, async (req: Request, res: Response) => {
   }
 });
 
-// ─── POST /api/housings/new ────────────────────────────────────────────────────────
-// Creates a new housing listing. Images are uploaded as multipart files.
+// ─── POST /api/housings/new ────────────────────────────────────────────────────
 router.post(
   "/new",
   authMiddleware,
@@ -219,8 +195,9 @@ router.post(
       if (validationError)
         return res.status(400).json({ message: validationError });
 
+      // req.files[].path = URLs Cloudinary complètes
       const files = req.files as Express.Multer.File[];
-      const imagePaths = files.map((f) => `/uploads/housing/${f.filename}`);
+      const imageUrls = files.map((f) => f.path);
 
       const housing = await prisma.housing.create({
         data: {
@@ -233,7 +210,7 @@ router.post(
           familyMembers: body.familyMembers!,
           maxTourists: body.maxTourists!,
           maxStayDays: body.maxStayDays!,
-          images: imagePaths,
+          images: imageUrls,
           ownerId,
         },
       });
@@ -249,8 +226,6 @@ router.post(
 );
 
 // ─── PUT /api/housings/:id ─────────────────────────────────────────────────────
-// Updates an existing housing. Optionally uploads new images (appended).
-// Pass `removeImages` as a JSON array of paths to delete specific images.
 router.put(
   "/:id",
   authMiddleware,
@@ -263,7 +238,6 @@ router.put(
       const existing = await prisma.housing.findUnique({ where: { id } });
       if (!existing)
         return res.status(404).json({ message: "Logement introuvable." });
-
       if (existing.ownerId !== ownerId)
         return res.status(403).json({ message: "Accès refusé." });
 
@@ -308,22 +282,21 @@ router.put(
       if (validationError)
         return res.status(400).json({ message: validationError });
 
-      // Handle image removal
+      // Supprimer les images demandées (Cloudinary + liste)
       let currentImages: string[] = existing.images as string[];
       const toRemove: string[] = req.body.removeImages
         ? JSON.parse(str(req.body.removeImages))
         : [];
 
-      for (const imgPath of toRemove) {
-        const fullPath = path.join(process.cwd(), imgPath);
-        if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
-        currentImages = currentImages.filter((p) => p !== imgPath);
+      if (toRemove.length > 0) {
+        await deleteCloudinaryImages(toRemove);
+        currentImages = currentImages.filter((url) => !toRemove.includes(url));
       }
 
-      // Append newly uploaded images
+      // Ajouter les nouvelles images uploadées
       const newFiles = req.files as Express.Multer.File[];
-      const newPaths = newFiles.map((f) => `/uploads/housing/${f.filename}`);
-      const finalImages = [...currentImages, ...newPaths];
+      const newUrls = newFiles.map((f) => f.path);
+      const finalImages = [...currentImages, ...newUrls];
 
       const updated = await prisma.housing.update({
         where: { id },
@@ -358,17 +331,11 @@ router.delete("/:id", authMiddleware, async (req: Request, res: Response) => {
     const existing = await prisma.housing.findUnique({ where: { id } });
     if (!existing)
       return res.status(404).json({ message: "Logement introuvable." });
-
     if (existing.ownerId !== ownerId)
       return res.status(403).json({ message: "Accès refusé." });
 
-    // Delete associated image files from disk
-    for (const imgPath of existing.images as string[]) {
-      if (imgPath.startsWith("/uploads/housing/")) {
-        const fullPath = path.join(process.cwd(), imgPath);
-        if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
-      }
-    }
+    // Supprimer toutes les images Cloudinary associées
+    await deleteCloudinaryImages(existing.images as string[]);
 
     await prisma.housing.delete({ where: { id } });
 

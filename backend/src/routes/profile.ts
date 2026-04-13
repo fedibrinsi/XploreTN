@@ -1,10 +1,8 @@
 import express from "express";
 import { Request, Response } from "express";
-import { User, Role } from "@prisma/client";
 import jwt from "jsonwebtoken";
-import multer from "multer";
-import path from "path";
-import fs from "fs";
+import { v2 as cloudinary } from "cloudinary";
+import { upload } from "../cloudinary"; // ton config cloudinary
 import prisma from "../prisma";
 
 const router = express.Router();
@@ -33,27 +31,12 @@ function authMiddleware(req: Request, res: Response, next: Function) {
   }
 }
 
-// ─── Multer config (profile photos) ───────────────────────────────────────────
-const uploadDir = path.join(process.cwd(), "uploads", "profile");
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, uploadDir),
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `profile_${Date.now()}${ext}`);
-  },
-});
-
-const upload = multer({
-  storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
-  fileFilter: (_req, file, cb) => {
-    const allowed = ["image/jpeg", "image/png", "image/webp"];
-    if (allowed.includes(file.mimetype)) cb(null, true);
-    else cb(new Error("Seuls les formats JPG, PNG et WEBP sont acceptés."));
-  },
-});
+// ─── Cloudinary helper ─────────────────────────────────────────────────────────
+function extractPublicId(url: string): string | null {
+  // ex: https://res.cloudinary.com/xxx/image/upload/v123/xploreTN/profiles/abc.jpg
+  const match = url.match(/\/upload\/(?:v\d+\/)?(.+?)(?:\.[^.]+)?$/);
+  return match ? match[1] : null;
+}
 
 // ─── GET /api/profile/me ───────────────────────────────────────────────────────
 router.get("/me", authMiddleware, async (req: Request, res: Response) => {
@@ -81,7 +64,6 @@ router.get("/me", authMiddleware, async (req: Request, res: Response) => {
 });
 
 // ─── PUT /api/profile/update ───────────────────────────────────────────────────
-// Updates fullName and/or bio (JSON body)
 router.put("/update", authMiddleware, async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id;
@@ -120,7 +102,6 @@ router.put("/update", authMiddleware, async (req: Request, res: Response) => {
 });
 
 // ─── POST /api/profile/photo ───────────────────────────────────────────────────
-// Uploads a new profile photo
 router.post(
   "/photo",
   authMiddleware,
@@ -132,22 +113,23 @@ router.post(
         return res.status(400).json({ message: "Aucun fichier reçu." });
       }
 
-      const imagePath = `/uploads/profile/${req.file.filename}`;
+      // req.file.path = URL Cloudinary complète (multer-storage-cloudinary)
+      const imageUrl = req.file.path;
 
-      // Delete old photo if not the default
+      // Supprimer l'ancienne photo Cloudinary si elle existe
       const existing = await prisma.user.findUnique({ where: { id: userId } });
-      if (
-        existing?.image &&
-        !existing.image.includes("profile.jpg") &&
-        existing.image.startsWith("/uploads/profile/")
-      ) {
-        const oldPath = path.join(process.cwd(), existing.image);
-        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      if (existing?.image?.includes("res.cloudinary.com")) {
+        const publicId = extractPublicId(existing.image);
+        if (publicId) {
+          await cloudinary.uploader
+            .destroy(publicId)
+            .catch((err) => console.warn("Cloudinary delete warning:", err));
+        }
       }
 
       const updated = await prisma.user.update({
         where: { id: userId },
-        data: { image: imagePath },
+        data: { image: imageUrl },
         select: {
           id: true,
           email: true,
