@@ -1,118 +1,400 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  createActivity,
+  CATEGORY_CONFIG,
+  type ActivityCategory,
+  type CreateActivityData,
+} from '../services/activityService';
+
+const allCategories = Object.keys(CATEGORY_CONFIG) as ActivityCategory[];
 
 export default function HostExperience() {
+  const navigate = useNavigate();
+
+  // ─── Form state ─────────────────────────────────────────────────────────
+  const [form, setForm] = useState<CreateActivityData>({
+    title: '',
+    description: '',
+    price: 0,
+    date: '',
+    location: '',
+    latitude: 36.8065,
+    longitude: 10.1815,
+    images: [],
+    capacity: 6,
+    category: 'ART_HERITAGE',
+  });
+  const [imageInput, setImageInput] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  // ─── Handlers ───────────────────────────────────────────────────────────
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value, type } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: type === 'number' ? Number(value) : value,
+    }));
+  };
+
+  const addImage = () => {
+    const trimmed = imageInput.trim();
+    if (trimmed && !form.images.includes(trimmed)) {
+      setForm((prev) => ({ ...prev, images: [...prev.images, trimmed] }));
+      setImageInput('');
+    }
+  };
+
+  const removeImage = (url: string) => {
+    setForm((prev) => ({
+      ...prev,
+      images: prev.images.filter((img) => img !== url),
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setError('');
+    setSuccess('');
+
+    // Check if user is logged in
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setError('You must be logged in as a Citoyen to create an activity.');
+      setSubmitting(false);
+      return;
+    }
+
+    try {
+      await createActivity({
+        ...form,
+        date: new Date(form.date).toISOString(),
+      });
+      setSuccess('Activity published successfully! It is now live.');
+      setTimeout(() => navigate('/dashboard'), 2000);
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.response?.data?.errors
+          ? JSON.stringify(err.response.data.errors)
+          : 'Failed to create activity. Please try again.';
+      setError(typeof msg === 'string' ? msg : JSON.stringify(msg));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // ─── Map embed URL based on current coordinates ─────────────────────────
+  const mapSrc = `https://maps.google.com/maps?q=${form.latitude},${form.longitude}&t=&z=10&ie=UTF8&iwloc=&output=embed`;
+
   return (
     <main className="pt-32 pb-40 px-6 max-w-5xl mx-auto">
       {/* Header Section */}
       <div className="mb-12">
-        <h1 className="font-headline text-5xl font-black text-primary tracking-tight mb-4 leading-tight">Share Your Tunisia</h1>
-        <p className="text-on-surface-variant text-lg max-w-2xl font-medium">As a local curator, you are the bridge between heritage and the curious traveler. Craft an experience that lingers in the soul.</p>
+        <h1 className="font-headline text-5xl font-black text-primary tracking-tight mb-4 leading-tight">
+          Share Your Tunisia
+        </h1>
+        <p className="text-on-surface-variant text-lg max-w-2xl font-medium">
+          As a local curator, you are the bridge between heritage and the curious traveler. Craft an
+          experience that lingers in the soul.
+        </p>
       </div>
-      
-      {/* Form Canvas */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-        {/* Left Column: Media & Details */}
-        <div className="lg:col-span-7 space-y-12">
-          {/* Image Upload Area */}
-          <section className="relative group">
-            <div className="aspect-[16/10] bg-surface-container-low rounded-[2rem] border-2 border-dashed border-outline-variant flex flex-col items-center justify-center overflow-hidden transition-all duration-500 hover:border-primary/40 group-hover:bg-surface-container-high cursor-pointer">
-              <div className="text-center p-8 space-y-4">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto text-primary group-hover:scale-110 transition-transform duration-500">
-                  <span className="material-symbols-outlined text-3xl">add_a_photo</span>
+
+      {/* Success / Error Messages */}
+      {success && (
+        <div className="mb-8 p-6 bg-green-50 border border-green-200 rounded-2xl flex items-center gap-4">
+          <span className="material-symbols-outlined text-green-600">check_circle</span>
+          <p className="text-green-800 font-medium">{success}</p>
+        </div>
+      )}
+      {error && (
+        <div className="mb-8 p-6 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-4">
+          <span className="material-symbols-outlined text-red-600">error</span>
+          <p className="text-red-800 font-medium">{error}</p>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit}>
+        {/* Form Canvas */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+          {/* Left Column: Media & Details */}
+          <div className="lg:col-span-7 space-y-12">
+            {/* Image URLs Section */}
+            <section className="relative group">
+              <div className="bg-surface-container-low rounded-[2rem] border-2 border-dashed border-outline-variant p-8 space-y-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+                    <span className="material-symbols-outlined text-2xl">add_a_photo</span>
+                  </div>
+                  <div>
+                    <h3 className="font-headline text-xl font-bold text-primary">Experience Images</h3>
+                    <p className="text-on-surface-variant text-sm">Add image URLs (e.g. from Cloudinary)</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-headline text-xl font-bold text-primary">Capture the Essence</h3>
-                  <p className="text-on-surface-variant text-sm mt-1">Drag and drop high-resolution imagery of your experience</p>
+
+                <div className="flex gap-2">
+                  <input
+                    className="flex-1 bg-surface-container-lowest border-none rounded-xl p-4 text-sm focus:ring-2 focus:ring-primary-container shadow-sm"
+                    placeholder="https://example.com/image.jpg"
+                    type="url"
+                    value={imageInput}
+                    onChange={(e) => setImageInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addImage(); } }}
+                  />
+                  <button
+                    type="button"
+                    onClick={addImage}
+                    className="px-6 py-4 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 transition-colors"
+                  >
+                    Add
+                  </button>
+                </div>
+
+                {/* Image Previews */}
+                {form.images.length > 0 && (
+                  <div className="grid grid-cols-3 gap-3 mt-4">
+                    {form.images.map((img, i) => (
+                      <div key={i} className="relative group/img rounded-xl overflow-hidden aspect-video">
+                        <img src={img} alt={`Preview ${i + 1}`} className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(img)}
+                          className="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity"
+                        >
+                          <span className="material-symbols-outlined text-sm">close</span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* Experience Details */}
+            <div className="space-y-8 arabesque-pattern p-8 rounded-[2rem] bg-surface-container-low/50">
+              <div className="space-y-2">
+                <label className="font-label text-sm font-bold uppercase tracking-widest text-primary/70 px-1">
+                  Experience Title *
+                </label>
+                <input
+                  className="w-full bg-surface-container-lowest border-none rounded-2xl p-5 text-xl font-headline focus:ring-2 focus:ring-primary-container shadow-sm"
+                  placeholder="e.g., Sundown Tea in the Medina Alleys"
+                  type="text"
+                  name="title"
+                  value={form.title}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="font-label text-sm font-bold uppercase tracking-widest text-primary/70 px-1">
+                  The Narrative *
+                </label>
+                <textarea
+                  className="w-full bg-surface-container-lowest border-none rounded-2xl p-5 text-body focus:ring-2 focus:ring-primary-container shadow-sm"
+                  placeholder="Describe the scents, the sounds, and the story of this journey..."
+                  rows={5}
+                  name="description"
+                  value={form.description}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="font-label text-sm font-bold uppercase tracking-widest text-primary/70 px-1">
+                    Category *
+                  </label>
+                  <select
+                    className="w-full bg-surface-container-lowest border-none rounded-2xl p-5 text-body focus:ring-2 focus:ring-primary-container shadow-sm appearance-none"
+                    name="category"
+                    value={form.category}
+                    onChange={handleChange}
+                    required
+                  >
+                    {allCategories.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {CATEGORY_CONFIG[cat].label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="font-label text-sm font-bold uppercase tracking-widest text-primary/70 px-1">
+                    Investment (TND) *
+                  </label>
+                  <input
+                    className="w-full bg-surface-container-lowest border-none rounded-2xl p-5 text-body focus:ring-2 focus:ring-primary-container shadow-sm"
+                    placeholder="0.00"
+                    type="number"
+                    min="1"
+                    step="0.01"
+                    name="price"
+                    value={form.price || ''}
+                    onChange={handleChange}
+                    required
+                  />
                 </div>
               </div>
-            </div>
-            <div className="absolute -top-4 -right-4 w-12 h-12 bg-tertiary text-on-tertiary rounded-full flex items-center justify-center shadow-lg transform rotate-12">
-              <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>colors_spark</span>
-            </div>
-          </section>
-          
-          {/* Experience Details */}
-          <div className="space-y-8 arabesque-pattern p-8 rounded-[2rem] bg-surface-container-low/50">
-            <div className="space-y-2">
-              <label className="font-label text-sm font-bold uppercase tracking-widest text-primary/70 px-1">Experience Title</label>
-              <input className="w-full bg-surface-container-lowest border-none rounded-2xl p-5 text-xl font-headline focus:ring-2 focus:ring-primary-container shadow-sm" placeholder="e.g., Sundown Tea in the Medina Alleys" type="text" />
-            </div>
-            <div className="space-y-2">
-              <label className="font-label text-sm font-bold uppercase tracking-widest text-primary/70 px-1">The Narrative</label>
-              <textarea className="w-full bg-surface-container-lowest border-none rounded-2xl p-5 text-body focus:ring-2 focus:ring-primary-container shadow-sm" placeholder="Describe the scents, the sounds, and the story of this journey..." rows={5}></textarea>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="font-label text-sm font-bold uppercase tracking-widest text-primary/70 px-1">Category</label>
-                <select className="w-full bg-surface-container-lowest border-none rounded-2xl p-5 text-body focus:ring-2 focus:ring-primary-container shadow-sm appearance-none">
-                  <option>Artisan Heritage</option>
-                  <option>Culinary Journey</option>
-                  <option>Coastal Escape</option>
-                  <option>Historical Tour</option>
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label className="font-label text-sm font-bold uppercase tracking-widest text-primary/70 px-1">Investment (TND)</label>
-                <input className="w-full bg-surface-container-lowest border-none rounded-2xl p-5 text-body focus:ring-2 focus:ring-primary-container shadow-sm" placeholder="0.00" type="number" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="font-label text-sm font-bold uppercase tracking-widest text-primary/70 px-1">
+                    Capacity *
+                  </label>
+                  <input
+                    className="w-full bg-surface-container-lowest border-none rounded-2xl p-5 text-body focus:ring-2 focus:ring-primary-container shadow-sm"
+                    placeholder="Max participants"
+                    type="number"
+                    min="1"
+                    name="capacity"
+                    value={form.capacity || ''}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="font-label text-sm font-bold uppercase tracking-widest text-primary/70 px-1">
+                    Location *
+                  </label>
+                  <input
+                    className="w-full bg-surface-container-lowest border-none rounded-2xl p-5 text-body focus:ring-2 focus:ring-primary-container shadow-sm"
+                    placeholder="e.g., Sidi Bou Said, Tunis"
+                    type="text"
+                    name="location"
+                    value={form.location}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        
-        {/* Right Column: Context & Scheduling */}
-        <div className="lg:col-span-5 space-y-8 lg:sticky lg:top-32">
-          {/* Location Picker */}
-          <div className="bg-surface-container-lowest p-6 rounded-[2rem] shadow-2xl shadow-on-surface/5 space-y-4">
-            <div className="flex justify-between items-center px-2">
-              <h3 className="font-headline text-xl font-bold text-primary">Location</h3>
-              <span className="text-xs font-bold text-on-surface-variant flex items-center gap-1">
-                <span className="material-symbols-outlined text-sm">location_on</span>
-                Tunis, TN
-              </span>
-            </div>
-            <div className="aspect-square w-full rounded-2xl overflow-hidden relative">
-              <img className="w-full h-full object-cover" src="https://www.seatemperature.org/public/map/sidi-bou-said-tn.png" alt="Map" />
-              <div className="absolute inset-0 bg-primary/10 backdrop-blur-[2px] flex items-center justify-center pointer-events-none">
-                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-xl animate-pulse">
-                  <div className="w-4 h-4 bg-primary rounded-full"></div>
+
+          {/* Right Column: Context & Scheduling */}
+          <div className="lg:col-span-5 space-y-8 lg:sticky lg:top-32">
+            {/* Location Picker */}
+            <div className="bg-surface-container-lowest p-6 rounded-[2rem] shadow-2xl shadow-on-surface/5 space-y-4">
+              <div className="flex justify-between items-center px-2">
+                <h3 className="font-headline text-xl font-bold text-primary">Location</h3>
+                <span className="text-xs font-bold text-on-surface-variant flex items-center gap-1">
+                  <span className="material-symbols-outlined text-sm">location_on</span>
+                  {form.location || 'Tunisia'}
+                </span>
+              </div>
+
+              {/* Coordinate Inputs */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
+                    Latitude
+                  </label>
+                  <input
+                    className="w-full bg-surface-container-low border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary-container"
+                    type="number"
+                    step="0.0001"
+                    min="-90"
+                    max="90"
+                    name="latitude"
+                    value={form.latitude}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
+                    Longitude
+                  </label>
+                  <input
+                    className="w-full bg-surface-container-low border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary-container"
+                    type="number"
+                    step="0.0001"
+                    min="-180"
+                    max="180"
+                    name="longitude"
+                    value={form.longitude}
+                    onChange={handleChange}
+                    required
+                  />
                 </div>
               </div>
-              <button className="absolute bottom-4 right-4 bg-white/90 backdrop-blur p-3 rounded-xl shadow-lg text-primary hover:bg-white transition-colors">
-                <span className="material-symbols-outlined">my_location</span>
+
+              {/* Map Preview */}
+              <div className="aspect-square w-full rounded-2xl overflow-hidden relative">
+                <iframe
+                  title="Location Preview"
+                  className="w-full h-full object-cover rounded-[2rem] opacity-70 grayscale transition-opacity duration-300 hover:opacity-100 hover:grayscale-0"
+                  src={mapSrc}
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+                <div className="absolute inset-0 bg-primary/10 backdrop-blur-[2px] flex items-center justify-center pointer-events-none">
+                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-xl animate-pulse">
+                    <div className="w-4 h-4 bg-primary rounded-full" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Date Selection */}
+            <div className="bg-secondary-container/30 p-8 rounded-[2rem] space-y-4">
+              <div className="flex items-center gap-3 mb-2">
+                <span className="material-symbols-outlined text-secondary">calendar_today</span>
+                <h3 className="font-headline text-lg font-bold text-secondary-fixed-variant">
+                  Availability
+                </h3>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-on-surface-variant uppercase">
+                  Experience Date *
+                </label>
+                <input
+                  className="w-full bg-surface-container-lowest p-4 rounded-xl border-none focus:ring-2 focus:ring-primary-container font-medium"
+                  type="datetime-local"
+                  name="date"
+                  value={form.date}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Final Action */}
+            <div className="pt-4">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full py-6 rounded-full bg-gradient-to-br from-primary to-primary-container text-on-primary font-headline text-xl font-bold shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-300 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {submitting ? (
+                  <>
+                    <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin" />
+                    Publishing...
+                  </>
+                ) : (
+                  <>
+                    Publish Activity
+                    <span className="material-symbols-outlined">send</span>
+                  </>
+                )}
               </button>
+              <p className="text-center text-xs text-on-surface-variant mt-6 px-8 leading-relaxed">
+                By publishing, you agree to our{' '}
+                <Link to="#" className="underline">
+                  Editorial Standards
+                </Link>{' '}
+                and the curator code of conduct.
+              </p>
             </div>
-          </div>
-          
-          {/* Date Selection */}
-          <div className="bg-secondary-container/30 p-8 rounded-[2rem] space-y-4">
-            <div className="flex items-center gap-3 mb-2">
-              <span className="material-symbols-outlined text-secondary">calendar_today</span>
-              <h3 className="font-headline text-lg font-bold text-secondary-fixed-variant">Availability</h3>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-surface-container-lowest p-4 rounded-xl flex flex-col">
-                <span className="text-[10px] font-bold text-on-surface-variant uppercase">Starts</span>
-                <span className="font-medium">Oct 24, 2024</span>
-              </div>
-              <div className="bg-surface-container-lowest p-4 rounded-xl flex flex-col">
-                <span className="text-[10px] font-bold text-on-surface-variant uppercase">Frequency</span>
-                <span className="font-medium">Daily</span>
-              </div>
-            </div>
-          </div>
-          
-          {/* Final Action */}
-          <div className="pt-4">
-            <button className="w-full py-6 rounded-full bg-gradient-to-br from-primary to-primary-container text-on-primary font-headline text-xl font-bold shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-300 flex items-center justify-center gap-3">
-              Publish Activity
-              <span className="material-symbols-outlined">send</span>
-            </button>
-            <p className="text-center text-xs text-on-surface-variant mt-6 px-8 leading-relaxed">
-              By publishing, you agree to our <Link to="#" className="underline">Editorial Standards</Link> and the curator code of conduct.
-            </p>
           </div>
         </div>
-      </div>
+      </form>
     </main>
   );
 }

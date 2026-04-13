@@ -76,7 +76,7 @@ export default function HomePage() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 max-w-7xl mx-auto h-auto md:h-[800px]">
           <div className="md:col-span-7 group relative rounded-3xl overflow-hidden shadow-lg transition-transform hover:scale-[1.01] cursor-pointer">
-            <Link to="/explore?category=workshops">
+            <Link to="/explore?category=ARTISAN_WORKSHOP">
               <img alt="Pottery Workshop" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://www.figsandjasmine.com/cdn/shop/articles/Tunisian_Ceramic_Blog-3.jpg?v=1702514603&width=1920" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
               <div className="absolute bottom-10 left-10 text-white">
@@ -87,7 +87,7 @@ export default function HomePage() {
             </Link>
           </div>
           <div className="md:col-span-5 group relative rounded-3xl overflow-hidden shadow-lg transition-transform hover:scale-[1.01] cursor-pointer">
-            <Link to="/explore?category=stays">
+            <Link to="/explore?category=ARTISAN_WORKSHOP">
               <img alt="Riad Courtyard" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://www.notesfromtheroad.com/files/sidi-bou-said-street.webp" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
               <div className="absolute bottom-10 left-10 text-white">
@@ -97,7 +97,7 @@ export default function HomePage() {
             </Link>
           </div>
           <div className="md:col-span-5 group relative rounded-3xl overflow-hidden shadow-lg transition-transform hover:scale-[1.01] cursor-pointer">
-            <Link to="/explore?category=culinary">
+            <Link to="/explore?category=GASTRONOMY">
               <img alt="Tunisian Spices" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAf3cEL_W_2KcjsRK-bRxvs9FgGHNRYxXEuyNOXVok5IUlnHpJ0lP7SqEmpwZC7szLFw1p2Whb3V9zCce2hmZX_fkg7maRLhK1uurHMA6TUCnhJ_lXo97EE_TclofQXCstFWqDGSH1wN5Lgb90zDXZhE6FND-AvMBDRrUjHqWlGjVIQY57iz3-EpHc2oetxJ89b5OplH-tqDgl0gcmtNKF2hsf4ldCeoKFV4sFhF9e7shy8NzF9c3HIxpaGMxEQ8Z-r-fMRXjoBL9A" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
               <div className="absolute bottom-10 left-10 text-white">
@@ -107,7 +107,7 @@ export default function HomePage() {
             </Link>
           </div>
           <div className="md:col-span-7 group relative rounded-3xl overflow-hidden shadow-lg transition-transform hover:scale-[1.01] cursor-pointer">
-            <Link to="/explore?category=desert">
+            <Link to="/explore?category=DESERT_EXPEDITION">
               <img alt="Sahara Desert" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCwgf9Lh-j_Cval-WlNx-04AKpLwJpLuEsJ0MhsauFfZv0WJ1Y3EU59z239av_kWCOk30Jct9jEu60fvmXHU_5Bha5tUhW7lcqxHuY8CjbeSh-kW8YRrl46vgkkm2k6ixxWcq45xvpx2xr8FsAuKKBFVuEwQxzZXJcmoxgE6YYKJxOCKrHRNmagImZSar59lu9g90QE9fobBnn-yv_tPYOGO9VKNivzu9KaF0s0qizyPr7gQiUCUQ22h8DWRU-nmBoHJioEwa3AHjw" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
               <div className="absolute bottom-10 left-10 text-white">

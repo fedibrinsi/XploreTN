@@ -20,6 +20,7 @@ model User {
   housings                 Housing[]
   conversationParticipants ConversationParticipant[]
   messages                 Message[]
+  activities Activity[]
 }
 
 model Activity {
@@ -36,6 +37,19 @@ model Activity {
   capacity    Int
   category    ActivityCategory
   createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  creatorId   Int
+  creator     User             @relation(fields: [creatorId], references: [id])
+
+  @@index([location])
+  @@index([date])
+  @@index([category])
+  @@index([status])
+  @@index([creatorId])
+}
+
+model Housing {
+  id            String      @id
   updatedAt   DateTime
   creatorId   Int
   User        User             @relation(fields: [creatorId], references: [id])
@@ -60,8 +74,9 @@ model Housing {
   maxStayDays   Int
   images        String[]
   createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
   ownerId       Int
+  User          User        @relation(fields: [ownerId], references: [id])
+  updatedAt     DateTime    @updatedAt
   owner         User        @relation(fields: [ownerId], references: [id])
 }
 
@@ -96,6 +111,13 @@ enum Role {
   TOURISTE
 }
 
+
+enum ActivityStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum ActivityCategory {
   ART_HERITAGE
   GASTRONOMY
@@ -107,12 +129,6 @@ enum ActivityCategory {
   CULTURAL_EVENT
   WELLNESS
   OTHER
-}
-
-enum ActivityStatus {
-  PENDING
-  APPROVED
-  REJECTED
 }
 
 enum HousingType {
