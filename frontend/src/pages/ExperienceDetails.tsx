@@ -2,6 +2,16 @@ import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { fetchActivityById, CATEGORY_CONFIG, type Activity } from '../services/activityService';
 
+// Cloudinary optimization helper
+const getOptimizedUrl = (url: string, width = 1600) => {
+  if (!url) return 'https://placehold.co/1600x900?text=No+Image';
+  if (url.includes('cloudinary.com')) {
+    const parts = url.split('/upload/');
+    return `${parts[0]}/upload/w_${width},q_auto,f_auto/${parts[1]}`;
+  }
+  return url;
+};
+
 export default function ExperienceDetails() {
   const { id } = useParams();
   const [activity, setActivity] = useState<Activity | null>(null);
@@ -68,7 +78,8 @@ export default function ExperienceDetails() {
       <header className="relative h-[665px] md:h-[768px] w-full overflow-hidden mt-20">
         <img
           className="w-full h-full object-cover"
-          src={activity.images[0] || 'https://placehold.co/1920x1080?text=No+Image'}
+          src={activity.images[0] ? getOptimizedUrl(activity.images[0], 2000)
+            : 'https://placehold.co/1600x900?text=No+Image'}
           alt={activity.title}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
@@ -145,20 +156,13 @@ export default function ExperienceDetails() {
             <div className="h-80 w-full rounded-3xl overflow-hidden bg-surface-container-high relative group">
               <iframe
                 title={`${activity.location} Map`}
-                className="w-full h-full object-cover opacity-80 grayscale transition-opacity duration-300 hover:opacity-100 hover:grayscale-0 relative z-0"
+                className="w-full h-full object-cover   relative z-0"
                 src={`https://maps.google.com/maps?q=${mapQuery}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
                 style={{ border: 0 }}
                 allowFullScreen
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
               />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none z-10 transition-opacity duration-300 group-hover:opacity-0 hidden md:flex">
-                <div className="w-4 h-4 bg-primary rounded-full animate-ping absolute" />
-                <div className="w-4 h-4 bg-primary rounded-full relative shadow-lg border-2 border-white" />
-                <span className="mt-2 bg-white px-3 py-1 rounded-full text-xs font-bold shadow-md text-on-surface">
-                  {activity.location}
-                </span>
-              </div>
             </div>
           </section>
 
@@ -168,7 +172,7 @@ export default function ExperienceDetails() {
               <img
                 alt={activity.creator.fullName}
                 className="w-full h-full object-cover"
-                src={`http://localhost:5000${activity.creator.image}`}
+                src={getOptimizedUrl(activity.creator.image, 2000)}
               />
             </div>
             <div className="space-y-4">
@@ -189,7 +193,7 @@ export default function ExperienceDetails() {
               <div className="grid grid-cols-2 gap-4">
                 {activity.images.slice(1).map((img, i) => (
                   <div key={i} className="rounded-3xl overflow-hidden aspect-[4/3]">
-                    <img src={img} alt={`${activity.title} ${i + 2}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+                    <img src={getOptimizedUrl(img, 800)} alt={`${activity.title} ${i + 2}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
                   </div>
                 ))}
               </div>
@@ -208,17 +212,6 @@ export default function ExperienceDetails() {
               </div>
               <div className="space-y-6 mt-16 text-left">
                 <h3 className="font-headline text-lg font-bold">Reserve For...</h3>
-                <div className="space-y-2 text-left">
-                  <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Choose Date</label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-primary pointer-events-none">calendar_today</span>
-                    <input
-                      className="w-full pl-12 pr-4 py-4 bg-surface-container-low rounded-2xl border-none focus:ring-2 focus:ring-primary/20 font-medium text-on-surface"
-                      type="date"
-                      defaultValue={new Date(activity.date).toISOString().split('T')[0]}
-                    />
-                  </div>
-                </div>
                 <div className="space-y-2 text-left">
                   <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Guests</label>
                   <div className="flex items-center justify-between bg-surface-container-low rounded-2xl p-3">
@@ -254,21 +247,6 @@ export default function ExperienceDetails() {
                   </button>
                 </Link>
                 <p className="text-center text-xs text-on-surface-variant">No charge until journey confirmation.</p>
-              </div>
-            </div>
-
-            {/* Status Badge */}
-            <div className="bg-secondary-container p-6 rounded-[2rem] flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-primary">
-                  <span className="material-symbols-outlined">verified</span>
-                </div>
-                <div>
-                  <h4 className="font-bold text-on-secondary-container">Status: {activity.status}</h4>
-                  <p className="text-xs text-on-secondary-container/70">
-                    Created {new Date(activity.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
               </div>
             </div>
           </div>
