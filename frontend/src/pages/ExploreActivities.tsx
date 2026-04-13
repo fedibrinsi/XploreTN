@@ -68,6 +68,7 @@ export default function ExploreActivities() {
   const renderCard = (activity: Activity, index: number) => {
     const catConfig = CATEGORY_CONFIG[activity.category];
     const isLarge = index === 2; // Third card spans full width
+    const formattedDate = new Date(activity.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
     if (isLarge) {
       return (
@@ -83,9 +84,15 @@ export default function ExploreActivities() {
                 src={activity.images[0] || 'https://placehold.co/800x600?text=No+Image'}
               />
               <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent md:block hidden" />
-              <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-1 shadow-sm">
-                <span className="text-xs font-bold text-on-surface-variant uppercase tracking-tighter">Full Day</span>
-                <span className="text-lg font-black text-primary">{activity.price} TND</span>
+              <div className="absolute top-6 left-6 flex items-center gap-2">
+                <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-1 shadow-sm">
+                  <span className="text-xs font-bold text-on-surface-variant uppercase tracking-tighter">Full Day</span>
+                  <span className="text-lg font-black text-primary">{activity.price} TND</span>
+                </div>
+                <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm text-xs font-bold text-on-surface-variant">
+                  <span className="material-symbols-outlined text-[14px]">calendar_today</span>
+                  {formattedDate}
+                </div>
               </div>
             </div>
             <div className="w-full md:w-3/5 p-10 flex flex-col justify-center">
@@ -135,6 +142,10 @@ export default function ExploreActivities() {
               <span className="text-xs font-bold text-on-surface-variant uppercase tracking-tighter">From</span>
               <span className="text-lg font-black text-primary">{activity.price} TND</span>
             </div>
+            <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm text-xs font-bold text-on-surface-variant">
+              <span className="material-symbols-outlined text-[14px]">calendar_today</span>
+              {formattedDate}
+            </div>
             <div className="absolute bottom-6 left-6 flex items-center gap-2 bg-tertiary-fixed text-on-tertiary-fixed-variant px-3 py-1.5 rounded-full text-xs font-bold">
               <span className="material-symbols-outlined text-sm">{catConfig.icon}</span>
               {catConfig.label}
@@ -171,8 +182,15 @@ export default function ExploreActivities() {
     <div className="pt-28 pb-32 min-h-screen px-4 md:px-8 max-w-7xl mx-auto flex flex-col md:flex-row gap-8">
       {/* Filter Sidebar */}
       <aside className="w-full md:w-80 shrink-0">
-        <div className="sticky top-28 bg-surface-container-low p-8 rounded-[2rem] relative overflow-hidden">
-          <div className="absolute inset-0 arabesque-pattern pointer-events-none"></div>
+        <div 
+          className="sticky top-28 bg-surface-container-low rounded-[2rem] flex flex-col"
+          style={{ maxHeight: 'calc(100vh - 8rem)' }}
+        >
+          <div className="absolute inset-0 arabesque-pattern pointer-events-none rounded-[2rem]"></div>
+          <div 
+            className="relative z-10 p-8 overflow-y-auto" 
+            style={{ scrollbarWidth: 'thin', scrollbarColor: 'var(--color-primary) transparent' }}
+          >
           <h2 className="font-headline text-2xl font-bold mb-8 text-primary">Refine Your Search</h2>
           <div className="space-y-8">
             {/* Categories */}
@@ -209,9 +227,15 @@ export default function ExploreActivities() {
             {/* Price Range */}
             <div>
               <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-4">Max Investment</p>
-              <div className="relative pt-1">
+              <div className="relative pt-6 pb-1">
+                <div 
+                  className="absolute top-0 -translate-x-1/2 bg-primary text-white text-[10px] font-bold py-1 px-2 rounded-md shadow-md transition-all duration-100 ease-out z-10 whitespace-nowrap before:content-[''] before:absolute before:top-full before:left-1/2 before:-translate-x-1/2 before:border-4 before:border-transparent before:border-t-primary"
+                  style={{ left: `calc(${((maxPrice - 20) / (500 - 20)) * 100}% + ${8 - (((maxPrice - 20) / (500 - 20)) * 16)}px)` }}
+                >
+                  {maxPrice >= 500 ? '500+' : maxPrice} TND
+                </div>
                 <input
-                  className="w-full h-2 bg-secondary-fixed-dim rounded-lg appearance-none cursor-pointer accent-primary"
+                  className="w-full h-2 bg-secondary-fixed-dim rounded-lg appearance-none cursor-pointer accent-primary relative z-0"
                   type="range"
                   min={20}
                   max={500}
@@ -220,7 +244,7 @@ export default function ExploreActivities() {
                 />
                 <div className="flex justify-between text-xs mt-2 font-medium">
                   <span>20 TND</span>
-                  <span className="font-bold text-primary">{maxPrice >= 500 ? '500+' : maxPrice} TND</span>
+                  <span>500+ TND</span>
                 </div>
               </div>
             </div>
@@ -230,10 +254,11 @@ export default function ExploreActivities() {
                 handleCategorySelect('');
                 setMaxPrice(500);
               }}
-              className="w-full py-4 rounded-full bg-gradient-to-br from-[#003873] to-[#1D4F91] text-white font-bold text-sm shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+              className="w-full py-4 rounded-full bg-gradient-to-br from-[#003873] to-[#1D4F91] text-white font-bold text-sm shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all mb-4"
             >
               Reset Filters
             </button>
+          </div>
           </div>
         </div>
       </aside>
