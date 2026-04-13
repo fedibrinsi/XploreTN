@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../generated/prisma"
 }
 
@@ -16,11 +16,10 @@ model User {
   password                 String
   role                     Role                      @default(TOURISTE)
   bio                      String?
-  Activity                 Activity[]
-  housings                 Housing[]
+  activities               Activity[]
   conversationParticipants ConversationParticipant[]
+  housings                 Housing[]
   messages                 Message[]
-  activities Activity[]
 }
 
 model Activity {
@@ -49,19 +48,6 @@ model Activity {
 }
 
 model Housing {
-  id            String      @id
-  updatedAt   DateTime
-  creatorId   Int
-  User        User             @relation(fields: [creatorId], references: [id])
-
-  @@index([category])
-  @@index([creatorId])
-  @@index([date])
-  @@index([location])
-  @@index([status])
-}
-
-model Housing {
   id            String      @id @default(uuid())
   title         String
   description   String
@@ -74,9 +60,8 @@ model Housing {
   maxStayDays   Int
   images        String[]
   createdAt     DateTime    @default(now())
-  ownerId       Int
-  User          User        @relation(fields: [ownerId], references: [id])
   updatedAt     DateTime    @updatedAt
+  ownerId       Int
   owner         User        @relation(fields: [ownerId], references: [id])
 }
 
@@ -106,11 +91,42 @@ model Place {
   @@index([city])
 }
 
+model Conversation {
+  id           String                    @id @default(uuid())
+  type         String
+  name         String?
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
+  participants ConversationParticipant[]
+  messages     Message[]
+}
+
+model ConversationParticipant {
+  conversationId String
+  userId         Int
+  joinedAt       DateTime     @default(now())
+  lastReadAt     DateTime?
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([conversationId, userId])
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+  senderId       Int
+  text           String
+  createdAt      DateTime     @default(now())
+  readBy         String[]
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+}
+
 enum Role {
   CITOYEN
   TOURISTE
 }
-
 
 enum ActivityStatus {
   PENDING
@@ -151,42 +167,4 @@ enum PlaceCategory {
   PHARMACY
   BAKERY
   MARKET
-}
-
-model Conversation {
-  id        String   @id @default(uuid())
-  type      String // "dm" ou "group"
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  participants ConversationParticipant[]
-  messages     Message[]
-}
-
-model ConversationParticipant {
-  conversationId String
-  userId         Int
-  joinedAt       DateTime  @default(now())
-  lastReadAt     DateTime?
-
-  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@id([conversationId, userId])
-}
-
-model Message {
-  id             String @id @default(uuid())
-  conversationId String
-  senderId       Int
-  text           String
-
-  createdAt DateTime @default(now())
-
-  // Tableau des IDs utilisateurs ayant lu le message
-  readBy String[]
-
-  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
 }
