@@ -1,6 +1,6 @@
 import express from "express";
 import { Request, Response } from "express";
-import { User, Role } from "@prisma/client";
+import type { User, Role } from "../../generated/prisma";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import prisma from "../prisma";
