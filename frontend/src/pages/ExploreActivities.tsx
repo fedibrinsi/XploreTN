@@ -6,6 +6,8 @@ import {
   type Activity,
   type ActivityCategory,
 } from '../services/activityService';
+import { useDebouncedPrice } from '../hooks/useDebouncedPrice';
+import { PriceRangeSlider } from '../components/PriceRangeSlider';
 
 export default function ExploreActivities() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -20,6 +22,11 @@ export default function ExploreActivities() {
   const [selectedCategory, setSelectedCategory] = useState<ActivityCategory | ''>
     ((searchParams.get('category') as ActivityCategory) || '');
   const [maxPrice, setMaxPrice] = useState<number>(500);
+  const { localPrice, setLocalPrice } = useDebouncedPrice(
+    maxPrice,
+    (price) => setMaxPrice(price),
+    300 // Debounce delay in ms
+  );
   const [sortBy, setSortBy] = useState('newest');
 
   // ─── Fetch activities whenever filters change ───────────────────────────
@@ -33,7 +40,7 @@ export default function ExploreActivities() {
         if (maxPrice < 500) filters.maxPrice = maxPrice;
 
         const result = await fetchActivities(filters);
-        let sorted = result.activities;
+        const sorted = result.activities;
 
         // Client-side sort
         if (sortBy === 'newest') sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -68,6 +75,7 @@ export default function ExploreActivities() {
   const renderCard = (activity: Activity, index: number) => {
     const catConfig = CATEGORY_CONFIG[activity.category];
     const isLarge = index === 2; // Third card spans full width
+    const formattedDate = new Date(activity.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
     if (isLarge) {
       return (
@@ -82,10 +90,16 @@ export default function ExploreActivities() {
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 src={activity.images[0] || 'https://placehold.co/800x600?text=No+Image'}
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent md:block hidden" />
-              <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-1 shadow-sm">
-                <span className="text-xs font-bold text-on-surface-variant uppercase tracking-tighter">Full Day</span>
-                <span className="text-lg font-black text-primary">{activity.price} TND</span>
+              <div className="absolute inset-0 bg-linear-to-r from-black/40 to-transparent md:block hidden" />
+              <div className="absolute top-6 left-6 flex items-center gap-2">
+                <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-1 shadow-sm">
+                  <span className="text-xs font-bold text-on-surface-variant uppercase tracking-tighter">Full Day</span>
+                  <span className="text-lg font-black text-primary">{activity.price} TND</span>
+                </div>
+                <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm text-xs font-bold text-on-surface-variant">
+                  <span className="material-symbols-outlined text-[14px]">calendar_today</span>
+                  {formattedDate}
+                </div>
               </div>
             </div>
             <div className="w-full md:w-3/5 p-10 flex flex-col justify-center">
@@ -124,16 +138,20 @@ export default function ExploreActivities() {
         className="group relative bg-surface-container-lowest rounded-[2.5rem] overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10"
       >
         <Link to={`/experience/${activity.id}`}>
-          <div className="aspect-[4/5] relative overflow-hidden">
+          <div className="aspect-4/5 relative overflow-hidden">
             <img
               alt={activity.title}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
               src={activity.images[0] || 'https://placehold.co/800x1000?text=No+Image'}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent" />
             <div className="absolute top-6 right-6 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-1 shadow-sm">
               <span className="text-xs font-bold text-on-surface-variant uppercase tracking-tighter">From</span>
               <span className="text-lg font-black text-primary">{activity.price} TND</span>
+            </div>
+            <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm text-xs font-bold text-on-surface-variant">
+              <span className="material-symbols-outlined text-[14px]">calendar_today</span>
+              {formattedDate}
             </div>
             <div className="absolute bottom-6 left-6 flex items-center gap-2 bg-tertiary-fixed text-on-tertiary-fixed-variant px-3 py-1.5 rounded-full text-xs font-bold">
               <span className="material-symbols-outlined text-sm">{catConfig.icon}</span>
@@ -171,8 +189,15 @@ export default function ExploreActivities() {
     <div className="pt-28 pb-32 min-h-screen px-4 md:px-8 max-w-7xl mx-auto flex flex-col md:flex-row gap-8">
       {/* Filter Sidebar */}
       <aside className="w-full md:w-80 shrink-0">
-        <div className="sticky top-28 bg-surface-container-low p-8 rounded-[2rem] relative overflow-hidden">
-          <div className="absolute inset-0 arabesque-pattern pointer-events-none"></div>
+        <div 
+          className="sticky top-28 bg-surface-container-low rounded-4xl flex flex-col"
+          style={{ maxHeight: 'calc(100vh - 8rem)' }}
+        >
+          <div className="absolute inset-0 arabesque-pattern pointer-events-none rounded-4xl"></div>
+          <div 
+            className="relative z-10 p-8 overflow-y-auto" 
+            style={{ scrollbarWidth: 'thin', scrollbarColor: 'var(--color-primary) transparent' }}
+          >
           <h2 className="font-headline text-2xl font-bold mb-8 text-primary">Refine Your Search</h2>
           <div className="space-y-8">
             {/* Categories */}
@@ -207,33 +232,24 @@ export default function ExploreActivities() {
             </div>
 
             {/* Price Range */}
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-4">Max Investment</p>
-              <div className="relative pt-1">
-                <input
-                  className="w-full h-2 bg-secondary-fixed-dim rounded-lg appearance-none cursor-pointer accent-primary"
-                  type="range"
-                  min={20}
-                  max={500}
-                  value={maxPrice}
-                  onChange={(e) => setMaxPrice(Number(e.target.value))}
-                />
-                <div className="flex justify-between text-xs mt-2 font-medium">
-                  <span>20 TND</span>
-                  <span className="font-bold text-primary">{maxPrice >= 500 ? '500+' : maxPrice} TND</span>
-                </div>
-              </div>
-            </div>
+            <PriceRangeSlider
+              value={localPrice}
+              onLocalChange={setLocalPrice}
+              min={20}
+              max={500}
+            />
 
             <button
               onClick={() => {
                 handleCategorySelect('');
                 setMaxPrice(500);
+                setLocalPrice(500);
               }}
-              className="w-full py-4 rounded-full bg-gradient-to-br from-[#003873] to-[#1D4F91] text-white font-bold text-sm shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+              className="w-full py-4 rounded-full bg-linear-to-br from-[#003873] to-[#1D4F91] text-white font-bold text-sm shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all mb-4"
             >
               Reset Filters
             </button>
+          </div>
           </div>
         </div>
       </aside>
@@ -266,7 +282,7 @@ export default function ExploreActivities() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {[1, 2, 3].map((i) => (
               <div key={i} className={`${i === 3 ? 'lg:col-span-2' : ''} bg-surface-container-lowest rounded-[2.5rem] overflow-hidden animate-pulse`}>
-                <div className="aspect-[4/5] bg-surface-container-high" />
+                <div className="aspect-4/5 bg-surface-container-high" />
                 <div className="p-8 space-y-4">
                   <div className="h-4 bg-surface-container-high rounded w-1/3" />
                   <div className="h-8 bg-surface-container-high rounded w-2/3" />

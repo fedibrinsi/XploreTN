@@ -1,24 +1,81 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { fetchActivityById, type Activity, CATEGORY_CONFIG } from '../services/activityService';
 
 export default function BookingPage() {
   const { id } = useParams();
-
+  const [activity, setActivity] = useState<Activity | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [guests, setGuests] = useState(2);
+
+  useEffect(() => {
+    const load = async () => {
+      if (!id) return;
+      setLoading(true);
+      setError('');
+      try {
+        const data = await fetchActivityById(id);
+        setActivity(data);
+        setGuests(Math.min(2, data.capacity)); // Default to 2 max
+      } catch (err: any) {
+        setError(err?.response?.data?.message || 'Failed to load experience');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center pt-20">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-on-surface-variant font-medium">Loading details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !activity) {
+    return (
+      <div className="min-h-screen flex items-center justify-center pt-20">
+        <div className="text-center space-y-4">
+          <span className="material-symbols-outlined text-6xl text-error">error</span>
+          <p className="text-error text-lg font-medium">{error || 'Experience not found'}</p>
+          <Link to={`/experience/${id || 1}`} className="inline-block mt-4 px-6 py-3 rounded-full bg-primary text-white font-bold">
+            Back
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const catConfig = CATEGORY_CONFIG[activity.category];
+  const formattedDate = new Date(activity.date).toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+  
+  const totalPrice = activity.price * guests;
 
   return (
     <>
       {/* Hero Experience Image */}
       <section className="relative h-[60vh] min-h-[400px] w-full overflow-hidden hero-mask mt-20">
-        <img alt="Sahara Desert at sunset" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1MLu3PTygJKJHQxwg5ZA_JkjwRkTPeHLpfeUcmZoqJzBNFrSMT7xUzVwb9QHOp4KyjZdfkKeoZFW4Y44ToJ06qZHcaFfa5K9zybDivR6DdMQV7bg-rFCO5v1dgpQzm_eKUemPax2DbscY4v4JduKhmIx1S5Bms-o71mE-k6JzzuRH-1YhWhWBXJU3XhLAverKAr6D7qGeNr38CuhCP7rUj2-w_saOYwYWkHNr91YbsEGAPQMmSAAwQwcJUuR4TrUjv1MPuAwo5cM" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-primary/40"></div>
+        <img alt={activity.title} className="w-full h-full object-cover" src={activity.images[0] || "https://placehold.co/1920x1080?text=No+Image"} />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-primary/60"></div>
         <div className="absolute bottom-16 left-0 w-full">
           <div className="max-w-7xl mx-auto px-6">
-            <div className="inline-block bg-secondary-container text-on-secondary-container px-4 py-1 font-label text-[10px] font-bold uppercase tracking-[0.2em] mb-4">
-              Signature Journey
+            <div className="inline-flex bg-secondary-container text-on-secondary-container px-4 py-1.5 rounded-full font-label text-[10px] font-bold uppercase tracking-[0.2em] mb-4 items-center gap-1.5 shadow-sm">
+              <span className="material-symbols-outlined text-[14px]">{catConfig.icon}</span>
+              {catConfig.label}
             </div>
             <h1 className="font-headline text-5xl lg:text-7xl text-white drop-shadow-lg leading-tight">
-              Private Sahara <br /><span className="italic font-normal">Expedition</span>
+              {activity.title}
             </h1>
           </div>
         </div>
@@ -42,20 +99,38 @@ export default function BookingPage() {
               <div className="bg-surface-container-lowest p-8 lg:p-10 shadow-xl shadow-primary/5 border border-surface-variant/30 rounded-xl space-y-8 mt-5">
                 <div>
                   <h2 className="font-headline text-3xl text-primary mb-4">Experience Details</h2>
-                  <p className="text-on-surface-variant leading-relaxed">Prepare for an immersive journey through the golden dunes of Douz, guided by the wisdom of the local Bedouins and the rhythm of the desert wind.</p>
+                  <p className="text-on-surface-variant leading-relaxed">{activity.description}</p>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 py-8 border-y border-surface-variant/30">
-                  <div>
-                    <span className="font-label text-[10px] uppercase tracking-[0.2em] text-tertiary font-bold mb-2 block">Date</span>
-                    <p className="font-headline text-xl text-primary">Oct 24, 2024</p>
+                
+                {/* Curator Mini Profile */}
+                <div className="flex items-center gap-4 bg-surface-container-low p-4 rounded-xl border border-surface-variant/20">
+                  <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 border-2 border-white shadow-sm">
+                    <img
+                      src={activity.creator.image ? `http://localhost:5000${activity.creator.image}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(activity.creator.fullName)}`}
+                      alt={activity.creator.fullName}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <div>
-                    <span className="font-label text-[10px] uppercase tracking-[0.2em] text-tertiary font-bold mb-2 block">Duration</span>
-                    <p className="font-headline text-xl text-primary">3 Days, 2 Nights</p>
+                    <p className="text-xs font-bold text-primary tracking-widest uppercase mb-0.5">Your Curator</p>
+                    <p className="font-headline font-bold text-on-surface">{activity.creator.fullName}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 py-8 border-y border-surface-variant/30">
+                  <div>
+                    <span className="font-label text-[10px] uppercase tracking-[0.2em] text-tertiary font-bold mb-2 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[14px]">calendar_today</span> 
+                      Date
+                    </span>
+                    <p className="font-headline text-xl text-primary">{formattedDate}</p>
                   </div>
                   <div>
-                    <span className="font-label text-[10px] uppercase tracking-[0.2em] text-tertiary font-bold mb-2 block">Location</span>
-                    <p className="font-headline text-xl text-primary">Douz Gateway</p>
+                    <span className="font-label text-[10px] uppercase tracking-[0.2em] text-tertiary font-bold mb-2 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[14px]">location_on</span> 
+                      Location
+                    </span>
+                    <p className="font-headline text-xl text-primary">{activity.location}</p>
                   </div>
                 </div>
 
@@ -63,7 +138,7 @@ export default function BookingPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                   <div>
                     <h3 className="font-headline text-xl text-primary">Number of Explorers</h3>
-                    <p className="text-xs text-on-surface-variant font-medium">Limited to small private groups</p>
+                    <p className="text-xs text-on-surface-variant font-medium">Max capacity: {activity.capacity} persons</p>
                   </div>
 
                   <div className="flex items-center justify-between bg-surface-container-low rounded-2xl p-3">
@@ -74,7 +149,7 @@ export default function BookingPage() {
                       <button 
                         type="button"
                         onClick={() => setGuests(Math.max(1, guests - 1))}
-                        className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors text-primary shadow-sm disabled:opacity-50"
+                        className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors text-primary shadow-sm disabled:opacity-50 cursor-pointer"
                         disabled={guests <= 1}
                       >
                         <span className="material-symbols-outlined text-[1rem]">remove</span>
@@ -82,9 +157,9 @@ export default function BookingPage() {
                       <span className="font-bold w-4 text-center">{guests}</span>
                       <button 
                         type="button"
-                        onClick={() => setGuests(Math.min(6, guests + 1))}
-                        className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors text-primary shadow-sm disabled:opacity-50"
-                        disabled={guests >= 6}
+                        onClick={() => setGuests(Math.min(activity.capacity, guests + 1))}
+                        className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors text-primary shadow-sm disabled:opacity-50 cursor-pointer"
+                        disabled={guests >= activity.capacity}
                       >
                         <span className="material-symbols-outlined text-[1rem]">add</span>
                       </button>
@@ -95,10 +170,10 @@ export default function BookingPage() {
 
               {/* Special Requests Section */}
               <div className="bg-surface-container-lowest p-8 lg:p-10 shadow-xl shadow-primary/5 border border-surface-variant/30 rounded-xl">
-                <h3 className="font-headline text-2xl text-primary mb-6">Personalize your Expedition</h3>
+                <h3 className="font-headline text-2xl text-primary mb-6">Additional Notes</h3>
                 <div className="space-y-2">
                   <label className="font-label text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold">Special Requests or Dietary Requirements</label>
-                  <textarea className="w-full bg-surface-container-low border border-surface-variant/50 focus:border-primary focus:ring-1 focus:ring-primary rounded-lg transition-all py-4 px-4 text-on-surface placeholder:text-outline-variant italic resize-none" placeholder="e.g. Vegetarian, extra blankets, early pickup..." rows={3}></textarea>
+                  <textarea className="w-full bg-surface-container-low border border-surface-variant/50 focus:border-primary focus:ring-1 focus:ring-primary rounded-lg transition-all py-4 px-4 text-on-surface placeholder:text-outline-variant italic resize-none" placeholder="e.g. Vegetarian, early pickup..." rows={3}></textarea>
                 </div>
               </div>
             </div>
@@ -116,29 +191,21 @@ export default function BookingPage() {
                   </h3>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-on-surface-variant">Adult Participant (×2)</span>
-                      <span className="font-bold text-primary">1,240.00 TND</span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-on-surface-variant">Private Guide &amp; Caravan</span>
-                      <span className="font-bold text-primary">350.00 TND</span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-on-surface-variant">Heritage Preservation Fee</span>
-                      <span className="font-bold text-primary">45.00 TND</span>
+                      <span className="text-on-surface-variant">Participant (×{guests})</span>
+                      <span className="font-bold text-primary">{(activity.price * guests).toFixed(2)} TND</span>
                     </div>
                   </div>
                   <div className="flex justify-between items-center pt-6 border-t border-surface-variant">
                     <span className="font-headline text-xl text-primary">Total Amount</span>
                     <div className="text-right">
-                      <span className="font-headline text-4xl text-primary block">1,635.00 TND</span>
+                      <span className="font-headline text-4xl text-primary block">{totalPrice.toFixed(2)} TND</span>
                       <span className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Including all taxes</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-6">
-                  <button className="w-full bg-primary text-white py-6 rounded-xl font-bold tracking-[0.2em] uppercase text-xs shadow-xl shadow-primary/30 hover:bg-primary-container hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3">
+                  <button className="w-full bg-primary text-white py-6 rounded-xl font-bold tracking-[0.2em] uppercase text-xs shadow-xl shadow-primary/30 hover:bg-primary-container hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 cursor-pointer">
                     <span>Confirm Booking</span>
                     <span className="material-symbols-outlined text-sm">arrow_forward</span>
                   </button>

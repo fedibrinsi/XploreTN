@@ -6,6 +6,8 @@ import {
   type ActivityCategory,
   type CreateActivityData,
 } from '../services/activityService';
+import ImageUploader from '../components/ImageUploader';
+import MapPicker from '../components/MapPicker';
 
 const allCategories = Object.keys(CATEGORY_CONFIG) as ActivityCategory[];
 
@@ -25,7 +27,6 @@ export default function HostExperience() {
     capacity: 6,
     category: 'ART_HERITAGE',
   });
-  const [imageInput, setImageInput] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -38,21 +39,6 @@ export default function HostExperience() {
     setForm((prev) => ({
       ...prev,
       [name]: type === 'number' ? Number(value) : value,
-    }));
-  };
-
-  const addImage = () => {
-    const trimmed = imageInput.trim();
-    if (trimmed && !form.images.includes(trimmed)) {
-      setForm((prev) => ({ ...prev, images: [...prev.images, trimmed] }));
-      setImageInput('');
-    }
-  };
-
-  const removeImage = (url: string) => {
-    setForm((prev) => ({
-      ...prev,
-      images: prev.images.filter((img) => img !== url),
     }));
   };
 
@@ -89,9 +75,6 @@ export default function HostExperience() {
     }
   };
 
-  // ─── Map embed URL based on current coordinates ─────────────────────────
-  const mapSrc = `https://maps.google.com/maps?q=${form.latitude},${form.longitude}&t=&z=10&ie=UTF8&iwloc=&output=embed`;
-
   return (
     <main className="pt-32 pb-40 px-6 max-w-5xl mx-auto">
       {/* Header Section */}
@@ -126,52 +109,12 @@ export default function HostExperience() {
           <div className="lg:col-span-7 space-y-12">
             {/* Image URLs Section */}
             <section className="relative group">
-              <div className="bg-surface-container-low rounded-[2rem] border-2 border-dashed border-outline-variant p-8 space-y-4">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary">
-                    <span className="material-symbols-outlined text-2xl">add_a_photo</span>
-                  </div>
-                  <div>
-                    <h3 className="font-headline text-xl font-bold text-primary">Experience Images</h3>
-                    <p className="text-on-surface-variant text-sm">Add image URLs (e.g. from Cloudinary)</p>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <input
-                    className="flex-1 bg-surface-container-lowest border-none rounded-xl p-4 text-sm focus:ring-2 focus:ring-primary-container shadow-sm"
-                    placeholder="https://example.com/image.jpg"
-                    type="url"
-                    value={imageInput}
-                    onChange={(e) => setImageInput(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addImage(); } }}
-                  />
-                  <button
-                    type="button"
-                    onClick={addImage}
-                    className="px-6 py-4 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 transition-colors"
-                  >
-                    Add
-                  </button>
-                </div>
-
-                {/* Image Previews */}
-                {form.images.length > 0 && (
-                  <div className="grid grid-cols-3 gap-3 mt-4">
-                    {form.images.map((img, i) => (
-                      <div key={i} className="relative group/img rounded-xl overflow-hidden aspect-video">
-                        <img src={img} alt={`Preview ${i + 1}`} className="w-full h-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => removeImage(img)}
-                          className="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity"
-                        >
-                          <span className="material-symbols-outlined text-sm">close</span>
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+              <div className="bg-surface-container-low rounded-[2rem] border-2 border-dashed border-outline-variant p-2 space-y-4">
+                 <ImageUploader 
+                   images={form.images} 
+                   onImagesChange={(urls) => setForm(prev => ({...prev, images: urls}))} 
+                   maxImages={6} 
+                 />
               </div>
             </section>
 
@@ -279,7 +222,7 @@ export default function HostExperience() {
           <div className="lg:col-span-5 space-y-8 lg:sticky lg:top-32">
             {/* Location Picker */}
             <div className="bg-surface-container-lowest p-6 rounded-[2rem] shadow-2xl shadow-on-surface/5 space-y-4">
-              <div className="flex justify-between items-center px-2">
+              <div className="flex justify-between items-center px-2 mb-2">
                 <h3 className="font-headline text-xl font-bold text-primary">Location</h3>
                 <span className="text-xs font-bold text-on-surface-variant flex items-center gap-1">
                   <span className="material-symbols-outlined text-sm">location_on</span>
@@ -287,59 +230,12 @@ export default function HostExperience() {
                 </span>
               </div>
 
-              {/* Coordinate Inputs */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
-                    Latitude
-                  </label>
-                  <input
-                    className="w-full bg-surface-container-low border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary-container"
-                    type="number"
-                    step="0.0001"
-                    min="-90"
-                    max="90"
-                    name="latitude"
-                    value={form.latitude}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
-                    Longitude
-                  </label>
-                  <input
-                    className="w-full bg-surface-container-low border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary-container"
-                    type="number"
-                    step="0.0001"
-                    min="-180"
-                    max="180"
-                    name="longitude"
-                    value={form.longitude}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Map Preview */}
-              <div className="aspect-square w-full rounded-2xl overflow-hidden relative">
-                <iframe
-                  title="Location Preview"
-                  className="w-full h-full object-cover rounded-[2rem] opacity-70 grayscale transition-opacity duration-300 hover:opacity-100 hover:grayscale-0"
-                  src={mapSrc}
-                  style={{ border: 0 }}
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                />
-                <div className="absolute inset-0 bg-primary/10 backdrop-blur-[2px] flex items-center justify-center pointer-events-none">
-                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-xl animate-pulse">
-                    <div className="w-4 h-4 bg-primary rounded-full" />
-                  </div>
-                </div>
-              </div>
+              <MapPicker 
+                latitude={form.latitude} 
+                longitude={form.longitude} 
+                onLocationChange={(lat, lng) => setForm(prev => ({...prev, latitude: lat, longitude: lng}))} 
+                height="350px" 
+              />
             </div>
 
             {/* Date Selection */}

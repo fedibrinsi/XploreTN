@@ -3,9 +3,13 @@ import { Link } from 'react-router-dom';
 import {
   fetchMyActivities,
   deleteActivity,
+  updateActivity,
   CATEGORY_CONFIG,
   type Activity,
+  type CreateActivityData,
 } from '../services/activityService';
+import ImageUploader from '../components/ImageUploader';
+import MapPicker from '../components/MapPicker';
 
 // ─── Status badge styles ────────────────────────────────────────────────────
 const STATUS_STYLES: Record<string, string> = {
@@ -14,11 +18,18 @@ const STATUS_STYLES: Record<string, string> = {
   REJECTED: 'text-red-700 bg-red-50',
 };
 
+const allCategories = Object.keys(CATEGORY_CONFIG) as Array<keyof typeof CATEGORY_CONFIG>;
+
 export default function CuratorDashboard() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  // Edit Modal State
+  const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
+  const [editForm, setEditForm] = useState<Partial<CreateActivityData> | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Get user info from localStorage
   const userStr = localStorage.getItem('user');
@@ -45,7 +56,7 @@ export default function CuratorDashboard() {
     load();
   }, []);
 
-  // ─── Delete handler ─────────────────────────────────────────────────────
+  // ─── Handlers ─────────────────────────────────────────────────────────
   const handleDelete = async (id: number) => {
     if (!confirm('Are you sure you want to delete this activity?')) return;
     setDeletingId(id);
@@ -59,13 +70,66 @@ export default function CuratorDashboard() {
     }
   };
 
+  const openEditModal = (activity: Activity) => {
+    setEditingActivity(activity);
+    setEditForm({
+      title: activity.title,
+      description: activity.description,
+      price: activity.price,
+      date: new Date(activity.date).toISOString().slice(0, 16), // Format for datetime-local
+      location: activity.location,
+      latitude: activity.latitude,
+      longitude: activity.longitude,
+      capacity: activity.capacity,
+      category: activity.category,
+      images: [...activity.images],
+    });
+  };
+
+  const closeEditModal = () => {
+    setEditingActivity(null);
+    setEditForm(null);
+  };
+
+  const handleEditChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    if (!editForm) return;
+    const { name, value, type } = e.target;
+    setEditForm((prev) => ({
+      ...prev!,
+      [name]: type === 'number' ? Number(value) : value,
+    }));
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingActivity || !editForm) return;
+    setIsSaving(true);
+    try {
+      const payload = {
+        ...editForm,
+        date: new Date(editForm.date!).toISOString(),
+      };
+      await updateActivity(editingActivity.id, payload);
+      
+      // Update local state without full reload
+      setActivities(prev => prev.map(act => act.id === editingActivity.id ? { ...act, ...payload, date: payload.date } as Activity : act));
+      closeEditModal();
+    } catch (err: any) {
+      alert(err?.response?.data?.message || 'Failed to update activity');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // ─── Stats ──────────────────────────────────────────────────────────────
   const totalActivities = activities.length;
   const approvedCount = activities.filter((a) => a.status === 'APPROVED').length;
   const pendingCount = activities.filter((a) => a.status === 'PENDING').length;
 
   return (
-    <main className="max-w-7xl mx-auto px-8 py-12 pt-32">
+    <main className="max-w-7xl mx-auto px-8 py-12 pt-32 relative">
       {/* Header */}
       <header className="mb-16">
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
@@ -249,9 +313,10 @@ export default function CuratorDashboard() {
                     </div>
 
                     {/* Hover overlay with actions */}
-                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                       <Link
                         to={`/experience/${activity.id}`}
+                        title="View Details"
                         className="bg-white/90 backdrop-blur w-12 h-12 rounded-full flex items-center justify-center text-primary shadow-lg hover:bg-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-300"
                       >
                         <span className="material-symbols-outlined">visibility</span>
@@ -259,8 +324,19 @@ export default function CuratorDashboard() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
+                          openEditModal(activity);
+                        }}
+                        title="Edit Activity"
+                        className="bg-white/90 backdrop-blur w-12 h-12 rounded-full flex items-center justify-center text-primary shadow-lg hover:bg-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-400"
+                      >
+                        <span className="material-symbols-outlined">edit</span>
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
                           handleDelete(activity.id);
                         }}
+                        title="Delete Activity"
                         disabled={deletingId === activity.id}
                         className="bg-white/90 backdrop-blur w-12 h-12 rounded-full flex items-center justify-center text-red-500 shadow-lg hover:bg-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-500 disabled:opacity-50"
                       >
@@ -272,7 +348,7 @@ export default function CuratorDashboard() {
                   </div>
                   <div className="flex justify-between items-start">
                     <div>
-                      <span className="text-[10px] font-bold tracking-[0.15em] uppercase text-primary/60 mb-1 block flex items-center gap-1">
+                      <span className="text-[10px] font-bold tracking-[0.15em] uppercase text-primary/60 mb-1 flex items-center gap-1">
                         <span className="material-symbols-outlined text-[10px]">{catConfig.icon}</span>
                         {catConfig.label} • Max {activity.capacity}
                       </span>
@@ -299,6 +375,158 @@ export default function CuratorDashboard() {
           </div>
         )}
       </section>
+
+      {/* Edit Modal Overlay */}
+      {editingActivity && editForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-surface-container-lowest w-full max-w-3xl max-h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-outline-variant/30 flex justify-between items-center bg-surface-container-low shrink-0">
+              <h2 className="font-headline text-2xl text-primary font-bold">Edit Experience</h2>
+              <button 
+                onClick={closeEditModal}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6" style={{ scrollbarWidth: 'thin' }}>
+              <form id="edit-activity-form" onSubmit={handleSaveEdit} className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-primary/70">Title</label>
+                  <input
+                    name="title"
+                    value={editForm.title}
+                    onChange={handleEditChange}
+                    required
+                    className="w-full bg-surface-container-low border-none rounded-xl p-3 focus:ring-2 focus:ring-primary text-on-surface"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-primary/70">Description</label>
+                  <textarea
+                    name="description"
+                    value={editForm.description}
+                    onChange={handleEditChange}
+                    required
+                    rows={4}
+                    className="w-full bg-surface-container-low border-none rounded-xl p-3 focus:ring-2 focus:ring-primary text-on-surface"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-widest text-primary/70">Category</label>
+                    <select
+                      name="category"
+                      value={editForm.category}
+                      onChange={handleEditChange}
+                      className="w-full bg-surface-container-low border-none rounded-xl p-3 focus:ring-2 focus:ring-primary text-on-surface"
+                    >
+                      {allCategories.map(cat => (
+                        <option key={cat} value={cat}>{CATEGORY_CONFIG[cat].label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-widest text-primary/70">Capacity</label>
+                    <input
+                      type="number"
+                      name="capacity"
+                      value={editForm.capacity}
+                      onChange={handleEditChange}
+                      min="1"
+                      required
+                      className="w-full bg-surface-container-low border-none rounded-xl p-3 focus:ring-2 focus:ring-primary text-on-surface"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-widest text-primary/70">Price (TND)</label>
+                    <input
+                      type="number"
+                      name="price"
+                      value={editForm.price}
+                      onChange={handleEditChange}
+                      min="1"
+                      step="0.1"
+                      required
+                      className="w-full bg-surface-container-low border-none rounded-xl p-3 focus:ring-2 focus:ring-primary text-on-surface"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-widest text-primary/70">Date</label>
+                    <input
+                      type="datetime-local"
+                      name="date"
+                      value={editForm.date}
+                      onChange={handleEditChange}
+                      required
+                      className="w-full bg-surface-container-low border-none rounded-xl p-3 focus:ring-2 focus:ring-primary text-on-surface font-sans"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-primary/70">Images</label>
+                  <ImageUploader 
+                    images={editForm.images || []}
+                    onImagesChange={(urls) => setEditForm(prev => ({ ...prev!, images: urls }))}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                     <label className="text-xs font-bold uppercase tracking-widest text-primary/70">Location</label>
+                     <p className="text-xs font-medium text-on-surface-variant flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">location_on</span> {editForm.location}</p>
+                  </div>
+                  <input
+                    name="location"
+                    value={editForm.location}
+                    onChange={handleEditChange}
+                    required
+                    placeholder="E.g. Tunis Medina"
+                    className="w-full bg-surface-container-low border-none rounded-xl p-3 mb-2 focus:ring-2 focus:ring-primary text-on-surface"
+                  />
+                  <MapPicker 
+                    latitude={editForm.latitude || 36.8}
+                    longitude={editForm.longitude || 10.18}
+                    onLocationChange={(lat, lng) => setEditForm(prev => ({ ...prev!, latitude: lat, longitude: lng }))}
+                    height="250px"
+                  />
+                </div>
+
+              </form>
+            </div>
+            
+            <div className="px-6 py-4 border-t border-outline-variant/30 flex justify-end gap-3 bg-surface-container-lowest shrink-0">
+              <button
+                type="button"
+                onClick={closeEditModal}
+                className="px-6 py-2.5 rounded-full font-bold text-on-surface-variant hover:bg-surface-container-low transition-colors"
+                disabled={isSaving}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                form="edit-activity-form"
+                disabled={isSaving}
+                className="px-8 py-2.5 rounded-full bg-primary text-white font-bold tracking-wide shadow-md hover:shadow-lg hover:bg-primary-container hover:text-on-primary-container transition-all flex items-center gap-2 disabled:opacity-50"
+              >
+                {isSaving ? (
+                  <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> Saving...</>
+                ) : (
+                  <><span className="material-symbols-outlined text-[18px]">save</span> Save Changes</>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Subtle Floating Organic Decorative Shape */}
       <div className="fixed -bottom-32 -right-32 w-96 h-96 bg-primary/5 rounded-full blur-[100px] pointer-events-none -z-10" />

@@ -26,12 +26,12 @@ function App() {
           <Route path="host" element={<HostExperience />} />
           <Route path="profile" element={<UserProfile />} />
           <Route path="dashboard" element={<CuratorDashboard />} />
-          <Route path="auth" element={<AuthPage />} />
           <Route path="housing" element={<HousingPage />} />
           <Route path="housingSearch" element={<HousingSearchPage />} />
           <Route path="/explorePage" element={<ExplorePage />} />
-          <Route path="/messaging" element={<MessagingApp />} />
         </Route>
+        <Route path="auth" element={<AuthPage />} />
+        <Route path="/messaging" element={<MessagingApp />} />
         <Route path="messages" element={<MessagingInterface />} />
       </Routes>
     </BrowserRouter>
