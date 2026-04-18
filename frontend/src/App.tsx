@@ -13,6 +13,7 @@ import HousingPage from "./pages/Housing";
 import HousingSearchPage from "./pages/HousingSearch";
 import ExplorePage from "./pages/ExplorePage";
 import MessagingApp from "./pages/Messaging";
+import Activities from "./pages/ExploreActivities";
 
 function App() {
   return (
@@ -29,6 +30,8 @@ function App() {
           <Route path="housing" element={<HousingPage />} />
           <Route path="housingSearch" element={<HousingSearchPage />} />
           <Route path="/explorePage" element={<ExplorePage />} />
+          <Route path="/messaging" element={<MessagingApp />} />
+          <Route path="/activities" element={<Activities />} />
         </Route>
         <Route path="auth" element={<AuthPage />} />
         <Route path="/messaging" element={<MessagingApp />} />

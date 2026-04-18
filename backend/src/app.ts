@@ -29,10 +29,6 @@ app.get("/", (req, res) => {
   res.send("XploreTN API running");
 });
 
-// SERVIR LES FICHIERS STATIQUES CORRECTEMENT
-// Cette ligne sert les fichiers du dossier 'uploads' sous le chemin '/uploads'
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
-
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRouter);
 app.use("/api/activities", activityRoutes);

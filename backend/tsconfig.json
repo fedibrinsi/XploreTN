@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2023",
+    "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
     "rootDir": ".", // to avoid rootDir errors during build
@@ -8,5 +8,14 @@
     "strict": true,
     "esModuleInterop": true,
     "types": ["node"]
-  }
+  },
+  "include": [
+    "src/**/*",
+    "prisma/**/*",
+    "generated/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

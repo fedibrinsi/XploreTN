@@ -53,7 +53,9 @@ async function main() {
     },
   });
 
-  console.log(`✅ Created curators: ${curator.fullName}, ${curator2.fullName}, ${curator3.fullName}`);
+  console.log(
+    `✅ Created curators: ${curator.fullName}, ${curator2.fullName}, ${curator3.fullName}`,
+  );
 
   // ─── Seed activities ────────────────────────────────────────────────────
   // From ExploreActivities.tsx + CuratorDashboard.tsx + HomePage.tsx (Curated Portals)
@@ -272,7 +274,9 @@ async function main() {
     }
   }
 
-  console.log(`\n🎉 Seeding complete! ${activities.length} activities processed.`);
+  console.log(
+    `\n🎉 Seeding complete! ${activities.length} activities processed.`,
+  );
 }
 
 main()
