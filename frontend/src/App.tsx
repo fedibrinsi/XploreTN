@@ -13,8 +13,16 @@ import HousingPage from "./pages/Housing";
 import HousingSearchPage from "./pages/HousingSearch";
 import ExplorePage from "./pages/ExplorePage";
 import MessagingApp from "./pages/Messaging";
+import DiscoveryPage from "./components/DiscoveryPage";
 
 function App() {
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const role =
+    typeof window !== "undefined" ? localStorage.getItem("role") : null;
+  const isLoggedIn = Boolean(token);
+  const isTourist = role === "TOURISTE";
+
   return (
     <BrowserRouter>
       <Routes>
@@ -33,6 +41,13 @@ function App() {
         <Route path="auth" element={<AuthPage />} />
         <Route path="/messaging" element={<MessagingApp />} />
         <Route path="messages" element={<MessagingInterface />} />
+        //! For testing only: remove before production
+        <Route
+          path="/discovery"
+          element={
+            <DiscoveryPage isLoggedIn={isLoggedIn} isTourist={isTourist} />
+          }
+        />
       </Routes>
     </BrowserRouter>
   );
