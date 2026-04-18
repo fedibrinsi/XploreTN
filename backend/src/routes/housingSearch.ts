@@ -49,10 +49,10 @@ function buildOrderBy(sortBy: SortBy): object {
   }
 }
 
-// ─── GET /api/housings/search ──────────────────────────────────────────────────
+// ─── GET /api/housingSearch/search ────────────────────────────────────────────
 //
 // Public endpoint — no authentication required.
-// Returns all housings that match the provided filters.
+// Returns only housings that have NO active (PENDING or ACCEPTED) reservation.
 //
 // Query parameters:
 //   search       – free-text search in title, description, location
@@ -65,6 +65,7 @@ function buildOrderBy(sortBy: SortBy): object {
 //   minStayDays  – minimum maxStayDays
 //   maxStayDays  – maximum maxStayDays
 //   sortBy       – "newest" | "oldest" | "maxTourists" | "maxStayDays" | "rooms"
+//   excludeReservedBy – userId (number): also hide housings this user already requested
 
 router.get("/search", async (req: Request, res: Response) => {
   try {
@@ -72,6 +73,7 @@ router.get("/search", async (req: Request, res: Response) => {
     const location = str(req.query.location).trim();
     const typesRaw = str(req.query.types).trim();
     const sortByRaw = str(req.query.sortBy).trim() as SortBy;
+    const excludeReservedByRaw = intOrUndefined(req.query.excludeReservedBy);
 
     const minRooms = intOrUndefined(req.query.minRooms);
     const maxRooms = intOrUndefined(req.query.maxRooms);
@@ -104,8 +106,24 @@ router.get("/search", async (req: Request, res: Response) => {
       ? sortByRaw
       : "newest";
 
+    // ── Find housing IDs with active reservations (PENDING or ACCEPTED) ──────
+    // These housings are considered "taken" and must be excluded
+    const activeReservations = await prisma.reservation.findMany({
+      where: {
+        status: { in: ["PENDING", "ACCEPTED"] },
+      },
+      select: { housingId: true },
+      distinct: ["housingId"],
+    });
+    const reservedHousingIds = activeReservations.map((r) => r.housingId);
+
     // ── Build Prisma where clause ─────────────────────────────────────────────
     const where: any = {};
+
+    // Exclude all housings with active reservations
+    if (reservedHousingIds.length > 0) {
+      where.id = { notIn: reservedHousingIds };
+    }
 
     // Free-text search across title, description, location
     if (search) {
@@ -150,8 +168,6 @@ router.get("/search", async (req: Request, res: Response) => {
     const housings = await prisma.housing.findMany({
       where,
       orderBy: buildOrderBy(sortBy),
-      // Optionally limit results — uncomment to paginate
-      // take: 50,
     });
 
     return res.json(housings);
@@ -161,14 +177,23 @@ router.get("/search", async (req: Request, res: Response) => {
   }
 });
 
-// ─── GET /api/housings/search/locations ───────────────────────────────────────
+// ─── GET /api/housingSearch/search/locations ───────────────────────────────────
 //
-// Returns a deduplicated list of all distinct location strings.
-// Useful for autocomplete in the location filter.
+// Returns a deduplicated list of all distinct location strings (only available housings).
 
 router.get("/search/locations", async (_req: Request, res: Response) => {
   try {
+    // Only show locations of available (non-reserved) housings
+    const activeReservations = await prisma.reservation.findMany({
+      where: { status: { in: ["PENDING", "ACCEPTED"] } },
+      select: { housingId: true },
+      distinct: ["housingId"],
+    });
+    const reservedIds = activeReservations.map((r) => r.housingId);
+
     const results = await prisma.housing.findMany({
+      where:
+        reservedIds.length > 0 ? { id: { notIn: reservedIds } } : undefined,
       select: { location: true },
       distinct: ["location"],
       orderBy: { location: "asc" },
@@ -182,15 +207,27 @@ router.get("/search/locations", async (_req: Request, res: Response) => {
   }
 });
 
-// ─── GET /api/housings/search/stats ───────────────────────────────────────────
+// ─── GET /api/housingSearch/search/stats ──────────────────────────────────────
 //
-// Returns aggregate stats for the explore page hero section.
+// Returns aggregate stats for the explore page hero section (available housings only).
 
 router.get("/search/stats", async (_req: Request, res: Response) => {
   try {
+    // Exclude housings with active reservations
+    const activeReservations = await prisma.reservation.findMany({
+      where: { status: { in: ["PENDING", "ACCEPTED"] } },
+      select: { housingId: true },
+      distinct: ["housingId"],
+    });
+    const reservedIds = activeReservations.map((r) => r.housingId);
+
+    const whereClause =
+      reservedIds.length > 0 ? { id: { notIn: reservedIds } } : {};
+
     const [total, aggregate] = await Promise.all([
-      prisma.housing.count(),
+      prisma.housing.count({ where: whereClause }),
       prisma.housing.aggregate({
+        where: whereClause,
         _sum: { maxTourists: true, rooms: true },
         _avg: { maxStayDays: true },
       }),

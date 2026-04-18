@@ -74,6 +74,17 @@ export interface HousingFilters {
   sortBy?: "newest" | "oldest" | "maxTourists" | "maxStayDays" | "rooms";
 }
 
+// ─── Toast types ──────────────────────────────────────────────────────────────
+
+type ToastVariant = "success" | "error" | "info" | "warning";
+
+interface ToastItem {
+  id: string;
+  message: string;
+  variant: ToastVariant;
+  subtitle?: string;
+}
+
 // ─── Axios instance ───────────────────────────────────────────────────────────
 
 const api = axios.create({
@@ -109,7 +120,7 @@ function formatDuration(days: number): string {
 // ─── API ──────────────────────────────────────────────────────────────────────
 
 const housingSearchApi = {
-  async search(filters: HousingFilters): Promise<Housing[]> {
+  async search(filters: HousingFilters, userId?: number): Promise<Housing[]> {
     const params: Record<string, string> = {};
     if (filters.search) params.search = filters.search;
     if (filters.location) params.location = filters.location;
@@ -125,6 +136,7 @@ const housingSearchApi = {
     if (filters.maxStayDays != null)
       params.maxStayDays = String(filters.maxStayDays);
     if (filters.sortBy) params.sortBy = filters.sortBy;
+    if (userId) params.excludeReservedBy = String(userId);
 
     const { data } = await api.get<Housing[]>(
       "http://localhost:5000/api/housingSearch/search",
@@ -133,6 +145,126 @@ const housingSearchApi = {
     return data;
   },
 };
+
+const reservationApi = {
+  async create(
+    housingId: string,
+  ): Promise<{ reservation: any; message: string }> {
+    const { data } = await api.post("http://localhost:5000/api/reservations", {
+      housingId,
+    });
+    return data;
+  },
+};
+
+// ─── Toast Container ──────────────────────────────────────────────────────────
+
+function ToastContainer({
+  toasts,
+  onDismiss,
+}: {
+  toasts: ToastItem[];
+  onDismiss: (id: string) => void;
+}) {
+  const variantConfig: Record<
+    ToastVariant,
+    { bg: string; icon: string; iconColor: string; border: string }
+  > = {
+    success: {
+      bg: "bg-[#1a2e1a]",
+      border: "border-emerald-500/30",
+      icon: "check_circle",
+      iconColor: "text-emerald-400",
+    },
+    error: {
+      bg: "bg-[#2e1a1a]",
+      border: "border-red-500/30",
+      icon: "error",
+      iconColor: "text-red-400",
+    },
+    info: {
+      bg: "bg-[#1a1e2e]",
+      border: "border-blue-500/30",
+      icon: "info",
+      iconColor: "text-blue-400",
+    },
+    warning: {
+      bg: "bg-[#2e271a]",
+      border: "border-amber-500/30",
+      icon: "warning",
+      iconColor: "text-amber-400",
+    },
+  };
+
+  return (
+    <div className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 max-w-sm w-full pointer-events-none">
+      {toasts.map((toast) => {
+        const cfg = variantConfig[toast.variant];
+        return (
+          <div
+            key={toast.id}
+            className={`
+              pointer-events-auto flex items-start gap-3 px-4 py-3.5 rounded-2xl
+              ${cfg.bg} border ${cfg.border}
+              shadow-2xl shadow-black/40
+              backdrop-blur-xl
+              animate-[slideInRight_0.35s_cubic-bezier(0.34,1.56,0.64,1)]
+            `}
+            style={{
+              animation: "slideInRight 0.35s cubic-bezier(0.34,1.56,0.64,1)",
+            }}
+          >
+            <span
+              className={`material-symbols-outlined text-xl flex-shrink-0 mt-0.5 ${cfg.iconColor}`}
+              style={{ fontVariationSettings: "'FILL' 1" }}
+            >
+              {cfg.icon}
+            </span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-white leading-snug">
+                {toast.message}
+              </p>
+              {toast.subtitle && (
+                <p className="text-xs text-white/60 mt-0.5 leading-relaxed">
+                  {toast.subtitle}
+                </p>
+              )}
+            </div>
+            <button
+              onClick={() => onDismiss(toast.id)}
+              className="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors mt-0.5"
+            >
+              <span className="material-symbols-outlined text-white/50 text-sm">
+                close
+              </span>
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── useToast hook ────────────────────────────────────────────────────────────
+
+function useToast() {
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
+
+  const dismiss = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  const toast = useCallback(
+    (message: string, variant: ToastVariant = "success", subtitle?: string) => {
+      const id = `${Date.now()}-${Math.random()}`;
+      setToasts((prev) => [...prev, { id, message, variant, subtitle }]);
+      setTimeout(() => dismiss(id), 5000);
+    },
+    [dismiss],
+  );
+
+  return { toasts, toast, dismiss };
+}
 
 // ─── Components ───────────────────────────────────────────────────────────────
 
@@ -272,7 +404,6 @@ function FilterSidebar({
   return (
     <aside className="w-72 shrink-0 self-start sticky top-28">
       <div className="bg-surface-container-lowest rounded-[1.75rem] border border-surface-variant/20 shadow-lg shadow-primary/5 overflow-hidden">
-        {/* Header */}
         <div className="px-6 py-5 border-b border-surface-variant/20 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-primary text-lg">
@@ -298,7 +429,6 @@ function FilterSidebar({
         </div>
 
         <div className="p-6 space-y-7">
-          {/* Location */}
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
               Location
@@ -312,7 +442,6 @@ function FilterSidebar({
             />
           </div>
 
-          {/* Type */}
           <div className="space-y-3">
             <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
               Housing Type
@@ -329,7 +458,6 @@ function FilterSidebar({
             </div>
           </div>
 
-          {/* Rooms */}
           <RangeSlider
             label="Rooms"
             min={1}
@@ -344,7 +472,6 @@ function FilterSidebar({
             }
           />
 
-          {/* Max Tourists */}
           <RangeSlider
             label="Guests"
             min={1}
@@ -359,7 +486,6 @@ function FilterSidebar({
             }
           />
 
-          {/* Stay Duration */}
           <RangeSlider
             label="Stay Duration"
             min={1}
@@ -375,7 +501,6 @@ function FilterSidebar({
             formatValue={formatDuration}
           />
 
-          {/* Sort */}
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
               Sort By
@@ -423,7 +548,6 @@ function HousingCard({
       onClick={() => onSelect(housing)}
       className="group bg-surface-container-lowest rounded-[2rem] overflow-hidden shadow-lg shadow-primary/5 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500 border border-surface-variant/20 flex flex-col cursor-pointer hover:-translate-y-1"
     >
-      {/* Image */}
       <div className="relative h-52 overflow-hidden">
         {housing.images[0] ? (
           <img
@@ -445,7 +569,12 @@ function HousingCard({
         <span className="absolute top-4 right-4 bg-primary text-white text-xs font-bold px-3 py-1.5 rounded-full shadow">
           {housing.maxTourists} guests
         </span>
-        <div className="absolute bottom-4 left-4 right-4">
+        {/* Available badge */}
+        <span className="absolute bottom-4 right-4 bg-emerald-500/90 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow">
+          <span className="w-1.5 h-1.5 rounded-full bg-white inline-block" />
+          Available
+        </span>
+        <div className="absolute bottom-4 left-4 right-16">
           <p className="text-white/80 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
             <span className="material-symbols-outlined text-xs">
               location_on
@@ -455,7 +584,6 @@ function HousingCard({
         </div>
       </div>
 
-      {/* Body */}
       <div className="p-5 flex flex-col flex-1 gap-3">
         <div>
           <h3 className="font-headline text-lg font-bold text-primary leading-snug group-hover:text-tertiary transition-colors line-clamp-1">
@@ -508,10 +636,12 @@ function HousingDetailModal({
   housing,
   onClose,
   currentUser,
+  onRequestSuccess,
 }: {
   housing: Housing;
   onClose: () => void;
   currentUser: LocalUser | null;
+  onRequestSuccess: (housingTitle: string) => void;
 }) {
   const navigate = useNavigate();
   const BASE_URL = "http://localhost:5000";
@@ -521,11 +651,9 @@ function HousingDetailModal({
   const [requesting, setRequesting] = useState(false);
   const [requestError, setRequestError] = useState<string | null>(null);
 
-  // ── Handle Request Stay ──
   const handleRequestStay = async () => {
     if (!currentUser) return;
 
-    // Prevent contacting yourself
     if (currentUser.id === housing.ownerId) {
       setRequestError("You cannot request a stay at your own listing.");
       return;
@@ -535,9 +663,13 @@ function HousingDetailModal({
     setRequestError(null);
 
     try {
+      // 1. Create reservation in DB (PENDING status)
+      await reservationApi.create(housing.id);
+
+      // 2. Open DM conversation with the owner
       const conv = await createDM(housing.ownerId);
 
-      // Navigate to messages with pre-filled context
+      // 3. Navigate to messaging with auto-message
       navigate("/messaging", {
         state: {
           targetConvId: conv.id,
@@ -545,9 +677,14 @@ function HousingDetailModal({
         },
       });
 
+      // 4. Notify parent to show success toast + remove from list
+      onRequestSuccess(housing.title);
       onClose();
-    } catch {
-      setRequestError("Impossible d'ouvrir la conversation. Réessayez.");
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ??
+        "Unable to complete your request. Please try again.";
+      setRequestError(msg);
     } finally {
       setRequesting(false);
     }
@@ -562,12 +699,10 @@ function HousingDetailModal({
         onClick={onClose}
       />
       <div className="relative z-10 bg-surface-container-lowest w-full sm:max-w-2xl max-h-[92dvh] overflow-y-auto rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl shadow-primary/20 border border-surface-variant/20">
-        {/* Drag handle */}
         <div className="flex justify-center pt-4 pb-1 sm:hidden">
           <div className="w-10 h-1.5 rounded-full bg-outline-variant" />
         </div>
 
-        {/* Images */}
         {housing.images.length > 0 && (
           <div className="relative h-72 overflow-hidden sm:rounded-t-[2.5rem]">
             <img
@@ -605,11 +740,7 @@ function HousingDetailModal({
                     <button
                       key={i}
                       onClick={() => setActiveImg(i)}
-                      className={`rounded-full transition-all ${
-                        i === activeImg
-                          ? "w-4 h-2 bg-white"
-                          : "w-2 h-2 bg-white/50"
-                      }`}
+                      className={`rounded-full transition-all ${i === activeImg ? "w-4 h-2 bg-white" : "w-2 h-2 bg-white/50"}`}
                     />
                   ))}
                 </div>
@@ -694,7 +825,22 @@ function HousingDetailModal({
             </p>
           </div>
 
-          {/* Error message */}
+          {/* What happens when you request */}
+          {!isOwnListing && (
+            <div className="flex items-start gap-3 p-4 bg-primary/5 rounded-2xl border border-primary/20 mb-6">
+              <span className="material-symbols-outlined text-primary text-base mt-0.5">
+                info
+              </span>
+              <p className="text-xs text-on-surface-variant leading-relaxed">
+                Clicking{" "}
+                <span className="font-bold text-primary">Request a Stay</span>{" "}
+                will send a message to the host and create a reservation
+                request. The listing will be removed from search while your
+                request is pending.
+              </p>
+            </div>
+          )}
+
           {requestError && (
             <div className="mb-4 flex items-center gap-2 p-3 bg-error/10 border border-error/20 rounded-xl text-sm text-error">
               <span className="material-symbols-outlined text-base">error</span>
@@ -702,7 +848,6 @@ function HousingDetailModal({
             </div>
           )}
 
-          {/* Request Stay Button */}
           {isOwnListing ? (
             <div className="w-full py-4 rounded-xl bg-surface-container-high text-on-surface-variant font-bold text-sm flex items-center justify-center gap-2 text-center">
               <span className="material-symbols-outlined text-base">home</span>
@@ -717,7 +862,7 @@ function HousingDetailModal({
               {requesting ? (
                 <>
                   <div className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
-                  Opening conversation…
+                  Sending request…
                 </>
               ) : (
                 <>
@@ -870,24 +1015,8 @@ function GuestBanner() {
             </h1>
             <p className="text-lg text-on-surface-variant leading-relaxed">
               Discover welcoming Tunisian families opening their homes to
-              travellers. Enjoy authentic stays, cultural exchange, and
-              unforgettable memories beyond traditional hotels.
+              travellers.
             </p>
-          </div>
-          <div className="flex flex-wrap justify-center gap-3">
-            {[
-              "Authentic local hosting",
-              "Family-friendly stays",
-              "Cultural immersion",
-              "Trusted community",
-            ].map((tag) => (
-              <span
-                key={tag}
-                className="text-sm px-4 py-2 rounded-full border border-outline-variant/30 text-on-surface-variant bg-surface-container-low"
-              >
-                {tag}
-              </span>
-            ))}
           </div>
           <a
             href="/auth"
@@ -895,12 +1024,6 @@ function GuestBanner() {
           >
             Sign in to Explore Homes
           </a>
-          <p className="text-sm text-outline text-center">
-            New here?{" "}
-            <a href="/auth" className="text-primary font-bold underline">
-              Create a free account
-            </a>
-          </p>
         </div>
       </div>
     </main>
@@ -923,6 +1046,8 @@ export default function HousingSearchPage() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const { toasts, toast, dismiss } = useToast();
+
   useEffect(() => {
     try {
       const raw = localStorage.getItem("user");
@@ -932,30 +1057,63 @@ export default function HousingSearchPage() {
     }
   }, []);
 
-  const fetchHousings = useCallback(async (f: HousingFilters) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await housingSearchApi.search(f);
-      setHousings(data);
-    } catch {
-      setError("Failed to load housings. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const fetchHousings = useCallback(
+    async (f: HousingFilters, userId?: number) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await housingSearchApi.search(f, userId);
+        setHousings(data);
+      } catch {
+        setError("Failed to load housings. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     if (currentUser === undefined) return;
     if (!currentUser) return;
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
     searchTimeout.current = setTimeout(() => {
-      fetchHousings({ ...filters, search: search || undefined });
+      fetchHousings(
+        { ...filters, search: search || undefined },
+        currentUser.id,
+      );
     }, 350);
     return () => {
       if (searchTimeout.current) clearTimeout(searchTimeout.current);
     };
   }, [filters, search, currentUser]);
+
+  // Called after a successful reservation request
+  const handleRequestSuccess = useCallback(
+    (housingTitle: string) => {
+      // Remove the housing from the local list immediately (optimistic update)
+      if (selected) {
+        setHousings((prev) => prev.filter((h) => h.id !== selected.id));
+      }
+
+      // Show success toast
+      toast(
+        "Reservation request sent!",
+        "success",
+        `Your request for "${housingTitle}" has been submitted. The host will review it shortly.`,
+      );
+
+      // Secondary toast after a brief delay
+      setTimeout(() => {
+        toast(
+          "Message sent to host",
+          "info",
+          "Check your messages to continue the conversation.",
+        );
+      }, 1200);
+    },
+    [selected, toast],
+  );
 
   const handleFiltersChange = (f: HousingFilters) => setFilters(f);
   const handleReset = () => {
@@ -970,6 +1128,14 @@ export default function HousingSearchPage() {
 
   return (
     <>
+      {/* Keyframes injected once */}
+      <style>{`
+        @keyframes slideInRight {
+          from { opacity: 0; transform: translateX(100%); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+      `}</style>
+
       <div className="pt-24 pb-32 min-h-screen px-4 md:px-8 max-w-[1400px] mx-auto">
         {/* Header */}
         <div className="mb-10">
@@ -988,13 +1154,20 @@ export default function HousingSearchPage() {
               </p>
             </div>
             {!loading && (
-              <p className="text-sm font-bold text-on-surface-variant bg-surface-container-low px-4 py-2 rounded-xl border border-surface-variant/30 self-start sm:self-auto shrink-0">
-                {housings.length} listing{housings.length !== 1 ? "s" : ""}
-              </p>
+              <div className="flex items-center gap-3 self-start sm:self-auto shrink-0">
+                <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+                  <span className="text-xs font-bold text-emerald-700">
+                    All Available
+                  </span>
+                </div>
+                <p className="text-sm font-bold text-on-surface-variant bg-surface-container-low px-4 py-2 rounded-xl border border-surface-variant/30">
+                  {housings.length} listing{housings.length !== 1 ? "s" : ""}
+                </p>
+              </div>
             )}
           </div>
 
-          {/* Search bar */}
           <div className="relative mt-6 max-w-xl">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline-variant">
               search
@@ -1019,7 +1192,6 @@ export default function HousingSearchPage() {
           </div>
         </div>
 
-        {/* Mobile filter button */}
         <div className="flex lg:hidden mb-6">
           <button
             onClick={() => setMobileFiltersOpen(true)}
@@ -1037,7 +1209,6 @@ export default function HousingSearchPage() {
           </button>
         </div>
 
-        {/* Layout */}
         <div className="flex gap-8 items-start">
           <div className="hidden lg:block">
             <FilterSidebar
@@ -1062,7 +1233,10 @@ export default function HousingSearchPage() {
                 </p>
                 <button
                   onClick={() =>
-                    fetchHousings({ ...filters, search: search || undefined })
+                    fetchHousings(
+                      { ...filters, search: search || undefined },
+                      currentUser?.id,
+                    )
                   }
                   className="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-xl font-bold text-sm hover:scale-[1.03] transition-all shadow-lg shadow-primary/20"
                 >
@@ -1109,16 +1283,15 @@ export default function HousingSearchPage() {
         </div>
       </div>
 
-      {/* Detail Modal */}
       {selected && (
         <HousingDetailModal
           housing={selected}
           onClose={() => setSelected(null)}
           currentUser={currentUser}
+          onRequestSuccess={handleRequestSuccess}
         />
       )}
 
-      {/* Mobile Filter Drawer */}
       <MobileFilterDrawer
         open={mobileFiltersOpen}
         onClose={() => setMobileFiltersOpen(false)}
@@ -1127,6 +1300,9 @@ export default function HousingSearchPage() {
         onReset={handleReset}
         activeCount={activeCount}
       />
+
+      {/* Toast notifications */}
+      <ToastContainer toasts={toasts} onDismiss={dismiss} />
     </>
   );
 }

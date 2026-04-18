@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider        = "prisma-client"
+  output          = "../generated/prisma"
+  previewFeatures = []
 }
 
 datasource db {
@@ -20,6 +21,7 @@ model User {
   conversationParticipants ConversationParticipant[]
   housings                 Housing[]
   messages                 Message[]
+  reservations             Reservation[]
 }
 
 model Activity {
@@ -48,7 +50,7 @@ model Activity {
 }
 
 model Housing {
-  id            String      @id @default(uuid())
+  id            String        @id @default(uuid())
   title         String
   description   String
   location      String
@@ -59,10 +61,11 @@ model Housing {
   maxTourists   Int
   maxStayDays   Int
   images        String[]
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
   ownerId       Int
-  owner         User        @relation(fields: [ownerId], references: [id])
+  owner         User          @relation(fields: [ownerId], references: [id])
+  reservations  Reservation[]
 }
 
 model Place {
@@ -123,6 +126,23 @@ model Message {
   sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
 }
 
+model Reservation {
+  id        String            @id @default(uuid())
+  housingId String
+  touristId Int
+  status    ReservationStatus @default(PENDING)
+  startDate DateTime
+  endDate   DateTime
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  housing   Housing           @relation(fields: [housingId], references: [id], onDelete: Cascade)
+  tourist   User              @relation(fields: [touristId], references: [id], onDelete: Cascade)
+
+  @@index([housingId])
+  @@index([touristId])
+  @@index([status])
+}
+
 enum Role {
   CITOYEN
   TOURISTE
@@ -167,4 +187,11 @@ enum PlaceCategory {
   PHARMACY
   BAKERY
   MARKET
+}
+
+enum ReservationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
 }
