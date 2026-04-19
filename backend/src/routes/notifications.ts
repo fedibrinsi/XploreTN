@@ -127,12 +127,12 @@ router.get("/", authenticateJWT, async (req: Request, res: Response) => {
     }
     // Fusionner et trier par date décroissante
     const merged = [
-      ...housingNotifs.map((n) => ({
+      ...housingNotifs.map((n: any) => ({
         ...n,
         kind: "housing" as const,
         actor: resolveActor(n),
       })),
-      ...activityNotifs.map((n) => ({
+      ...activityNotifs.map((n: any) => ({
         ...n,
         kind: "activity" as const,
         actor: resolveActor(n),

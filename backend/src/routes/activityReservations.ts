@@ -165,7 +165,7 @@ router.get(
         pendingReservations: typeof reservations;
         acceptedReservations: typeof reservations;
       };
-      const grouped = reservations.reduce<Record<number, G>>((acc, r) => {
+      const grouped = reservations.reduce<Record<number, G>>((acc: Record<number, G>, r: any) => {
         const key = r.activity.id;
         if (!acc[key]) {
           acc[key] = {

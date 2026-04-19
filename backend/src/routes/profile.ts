@@ -169,7 +169,7 @@ async function updateProfile(
       image: updated.image,
       bio: updated.bio,
       interests: updated.interests,
-    };
+    } as any;
     res.locals.statusCode = 200;
     res.locals.message = "Profile updated successfully.";
 

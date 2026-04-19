@@ -1116,7 +1116,7 @@ export default function ExplorePage() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                   {sortedPlaces.map((p) => (
-                    <PlaceCard key={p.id} place={p} />
+                    <PlaceCard key={p.id} place={p} onSelect={() => {}} />
                   ))}
                 </div>
               </>

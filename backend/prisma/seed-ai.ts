@@ -8,7 +8,7 @@ import {
   ActivityStatus,
   PlaceCategory,
   HousingType,
-} from "../generated/prisma/client";
+} from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcrypt";
 
