@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import messageImg from "../assets/explore.jpg";
 import { useSearch, useRecommendations, useMatchLocals } from "../hooks/useAI";
 import ActivityCard from "../components/ActivityCard";
@@ -1064,6 +1065,8 @@ export default function ExplorePage() {
   const [usePersonalised, setUsePersonalised] = useState<boolean>(false);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
+  const navigate = useNavigate();
+
   // ─── AI Hooks ───────────────────────────────────────────────────────────────
   const {
     results: searchResults,
@@ -1516,7 +1519,7 @@ export default function ExplorePage() {
             )}
 
             {recommendations.length > 0 && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {recommendations.map((item) => (
                   <ActivityCard
                     key={item.id}
@@ -1548,6 +1551,15 @@ export default function ExplorePage() {
                 ))}
               </div>
             )}
+
+            <div className="flex justify-center mt-8">
+              <button
+                onClick={() => navigate("/explore")}
+                className="px-6 py-3 rounded-full bg-primary text-white font-bold text-sm shadow-lg shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all"
+              >
+                Explore All Activities
+              </button>
+            </div>
           </section>
         )}
 
