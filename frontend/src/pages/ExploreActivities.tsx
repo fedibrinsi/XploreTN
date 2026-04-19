@@ -24,8 +24,6 @@ export default function ExploreActivities() {
   const [error, setError] = useState("");
   const [total, setTotal] = useState(0);
 
-  const token = localStorage.getItem("token");
-
   // Filters
   const [selectedCategory, setSelectedCategory] = useState<
     ActivityCategory | ""
