@@ -1,9 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   fetchMyActivities,
-  deleteActivity,
   updateActivity,
   CATEGORY_CONFIG,
   type Activity,
@@ -11,13 +10,6 @@ import {
 } from "../services/activityService";
 import ImageUploader from "../components/ImageUploader";
 import MapPicker from "../components/MapPicker";
-
-// ─── Status badge styles ────────────────────────────────────────────────────
-const STATUS_STYLES: Record<string, string> = {
-  APPROVED: "text-green-700 bg-green-50",
-  PENDING: "text-amber-700 bg-amber-50",
-  REJECTED: "text-red-700 bg-red-50",
-};
 
 const allCategories = Object.keys(CATEGORY_CONFIG) as Array<
   keyof typeof CATEGORY_CONFIG
@@ -77,10 +69,6 @@ function getAuthHeaders() {
   const token = localStorage.getItem("token");
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
-
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:5000/api",
-});
 
 async function fetchMyHousings(): Promise<HousingWithReservations[]> {
   const { data } = await axios.get("http://localhost:5000/api/housings/view", {
@@ -209,9 +197,8 @@ export default function CuratorDashboard() {
   const navigate = useNavigate();
 
   const [activities, setActivities] = useState<Activity[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [, setLoading] = useState(true);
+  const [, setError] = useState("");
 
   // Edit Modal State
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
@@ -315,35 +302,6 @@ export default function CuratorDashboard() {
   }, []);
 
   // ─── Activity Handlers ────────────────────────────────────────────────────
-  const handleDelete = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this activity?")) return;
-    setDeletingId(id);
-    try {
-      await deleteActivity(id);
-      setActivities((prev) => prev.filter((a) => a.id !== id));
-    } catch (err: any) {
-      alert(err?.response?.data?.message || "Failed to delete activity");
-    } finally {
-      setDeletingId(null);
-    }
-  };
-
-  const openEditModal = (activity: Activity) => {
-    setEditingActivity(activity);
-    setEditForm({
-      title: activity.title,
-      description: activity.description,
-      price: activity.price,
-      date: new Date(activity.date).toISOString().slice(0, 16),
-      location: activity.location,
-      latitude: activity.latitude,
-      longitude: activity.longitude,
-      capacity: activity.capacity,
-      category: activity.category,
-      images: [...activity.images],
-    });
-  };
-
   const closeEditModal = () => {
     setEditingActivity(null);
     setEditForm(null);
@@ -760,11 +718,6 @@ export default function CuratorDashboard() {
                 CATEGORY_CONFIG[
                   activity.category as keyof typeof CATEGORY_CONFIG
                 ];
-              const activityDate = new Date(activity.date).toLocaleDateString(
-                "en-GB",
-                { day: "numeric", month: "short", year: "numeric" },
-              );
-
               return (
                 <div
                   key={activity.id}
@@ -980,15 +933,6 @@ export default function CuratorDashboard() {
                   CATEGORY_CONFIG[
                     activity.category as keyof typeof CATEGORY_CONFIG
                   ];
-                const activityDate = new Date(activity.date).toLocaleDateString(
-                  "en-GB",
-                  {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  },
-                );
-
                 return (
                   <div
                     key={activity.id}

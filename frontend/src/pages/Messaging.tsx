@@ -169,8 +169,6 @@ function NewDMModal({
   const [results, setResults] = useState<UserResult[]>([]);
   const [loading, setLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const BASE =
-    (import.meta as any).env?.VITE_API_URL || "http://localhost:5000";
 
   const handleSearch = (val: string) => {
     setQuery(val);

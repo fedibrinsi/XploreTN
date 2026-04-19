@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { LocationAutocomplete } from "./LocationAutocomplete";
 import { createDM } from "../types/messages";
-import housingImg from "../assets/housingSearch.jpg";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

@@ -3,7 +3,7 @@ import axios from "axios";
 import { LocationAutocomplete } from "./LocationAutocomplete";
 import messageImg from "../assets/housing1.jpg";
 import MapPicker from "../components/MapPicker";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1177,7 +1177,7 @@ function GuestBanner() {
   const [previewHousings, setPreviewHousings] = useState<Housing[]>([]);
   const [loadingPreview, setLoadingPreview] = useState(true);
   const BACKEND_URL = "http://localhost:5000";
-  const [totalHousings, setTotalHousings] = useState(0);
+  const totalHousings = previewHousings.length;
 
   useEffect(() => {
     const load = async () => {

@@ -1,51 +1,40 @@
-version: "3.9"
 services:
-  # ── AI Service (FastAPI) ────────────────────────────────────────────────────
   ai-service:
     build:
       context: ./ai-service
       args:
-        EMBEDDING_MODEL: intfloat/e5-base-v2 # baked into image at build time
+        EMBEDDING_MODEL: intfloat/e5-base-v2
     container_name: xploretn_ai
     restart: unless-stopped
     env_file: ./ai-service/.env
     ports:
       - "8000:8000"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 60s # model download / load takes time
+      start_period: 60s
 
-  # ── Node.js Backend (Express + Prisma) ─────────────────────────────────────
   backend:
-    build: ./backend # adjust path to your Node.js project root
+    build: ./backend
     container_name: xploretn_backend
     restart: unless-stopped
     env_file: ./backend/.env
     environment:
-      AI_SERVICE_URL: http://ai-service:8000 # internal Docker network — no port exposure needed
-      AI_SERVICE_API_KEY: change-me-in-production
+      AI_SERVICE_URL: http://ai-service:8000
     ports:
-      - "4000:4000"
+      - "5000:5000"
     depends_on:
       ai-service:
-        condition: service_healthy # wait for model to be loaded
+        condition: service_healthy
 
-  # ── React Frontend (dev only) ───────────────────────────────────────────────
-  # In production, serve the built static files via Nginx or a CDN.
   frontend:
-    build:
-      context: ./frontend
-      target: dev # multi-stage: dev vs production build
+    build: ./frontend
     container_name: xploretn_frontend
     restart: unless-stopped
-    environment:
-      VITE_API_URL: http://localhost:5000 # points to Node.js backend
     ports:
       - "3000:3000"
     depends_on:
-      - backend
-    volumes:
-      - ./frontend/src:/app/src # hot-reload in dev
+      backend:
+        condition: service_started

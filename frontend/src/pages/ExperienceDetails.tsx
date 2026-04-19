@@ -5,7 +5,6 @@ import {
   CATEGORY_CONFIG,
   type Activity,
 } from "../services/activityService";
-import { LocationAutocomplete } from "./LocationAutocomplete";
 
 // Cloudinary optimization helper
 const getOptimizedUrl = (url: string, width = 1600) => {
@@ -22,8 +21,6 @@ export default function ExperienceDetails() {
   const [activity, setActivity] = useState<Activity | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [guests, setGuests] = useState(2);
-  const [pickupLocation, setPickupLocation] = useState("");
   const currentUserId = (() => {
     try {
       const raw = localStorage.getItem("user");

@@ -20,5 +20,5 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/uploads ./uploads
 
 ENV NODE_ENV=production
-EXPOSE 4000
+EXPOSE 5000
 CMD ["node", "dist/index.js"]

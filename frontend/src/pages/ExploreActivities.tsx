@@ -10,122 +10,9 @@ import {
 } from "../services/activityService";
 import { useDebouncedPrice } from '../hooks/useDebouncedPrice';
 import { PriceRangeSlider } from '../components/PriceRangeSlider';
-import activityImg from "../assets/activity.jpg";
 import ActivityCard from "../components/ActivityCard";
 import { useSearch } from "../hooks/useAI";
 import type { EntityType } from "../types/ai.types";
-
-// ─── Guest Banner ─────────────────────────────────────────────────────────────
-
-function GuestBanner() {
-  return (
-    <div className="w-full">
-      <div className="relative w-full h-[55vh] overflow-hidden">
-        <img
-          src={activityImg}
-          alt="Discover Tunisia with locals"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-black/50" />
-      </div>
-
-      <div className="w-full bg-surface px-6 md:px-20 py-14 flex flex-col items-center justify-center gap-6">
-        <div className="flex items-center gap-1.5 bg-amber-50 rounded-full px-4 py-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
-          <span className="text-[11px] font-semibold text-amber-800 uppercase tracking-wide">
-            Authentic Tunisian Experiences
-          </span>
-        </div>
-
-        <div className="text-center max-w-2xl">
-          <h1 className="font-headline text-4xl md:text-5xl italic text-primary leading-tight mb-4">
-            Explore Tunisia,
-            <br />
-            One Experience at a Time
-          </h1>
-          <p className="text-lg text-on-surface-variant leading-relaxed">
-            Join local Tunisian citizens for unique activities — share a coffee,
-            discover hidden places, and take part in unforgettable local
-            adventures.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap justify-center gap-3 mt-2">
-          {[
-            { icon: "coffee", label: "Share a Coffee" },
-            { icon: "explore", label: "Discover Hidden Places" },
-            { icon: "groups", label: "Join Local Activities" },
-            { icon: "hiking", label: "Outdoor Adventures" },
-            { icon: "palette", label: "Cultural Workshops" },
-          ].map((item) => (
-            <div
-              key={item.label}
-              className="flex items-center gap-2 px-4 py-2 bg-[#003873]/8 border border-[#003873]/15 rounded-full"
-            >
-              <span className="material-symbols-outlined text-[16px] text-primary">
-                {item.icon}
-              </span>
-              <span className="text-sm font-medium text-primary">
-                {item.label}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Guest Preview Overlay CTA ────────────────────────────────────────────────
-
-function GuestPreviewOverlay({ total }: { total: number }) {
-  return (
-    <div className="absolute inset-0 z-10 flex flex-col items-center justify-end pb-16 pointer-events-none">
-      {/* Gradient fade from transparent → solid surface */}
-      <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/80 to-transparent" />
-
-      {/* CTA card — re-enable pointer events just for this */}
-      <div className="relative pointer-events-auto flex flex-col items-center gap-5 bg-surface-container-lowest border border-surface-container-high rounded-[2rem] px-10 py-8 shadow-2xl shadow-primary/10 max-w-md w-full mx-4 text-center">
-        {/* Lock icon */}
-        <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
-          <span className="material-symbols-outlined text-3xl text-primary">
-            lock
-          </span>
-        </div>
-
-        <div>
-          <h2 className="font-headline text-2xl font-bold text-on-surface mb-1">
-            Unlock all experiences
-          </h2>
-          <p className="text-on-surface-variant text-sm leading-relaxed">
-            Sign in to explore{" "}
-            <span className="font-semibold text-primary">{total}+</span> curated
-            activities and book with local hosts across Tunisia.
-          </p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-3 w-full">
-          <a
-            href="/auth"
-            className="flex-1 py-3.5 bg-primary text-on-primary rounded-xl text-sm font-bold uppercase tracking-wider text-center shadow-lg shadow-primary/25 hover:scale-[1.02] active:scale-95 transition-transform"
-          >
-            Sign in
-          </a>
-          <a
-            href="/auth?tab=register"
-            className="flex-1 py-3.5 bg-surface-container-high text-on-surface rounded-xl text-sm font-bold uppercase tracking-wider text-center hover:bg-surface-container-highest active:scale-95 transition-all"
-          >
-            Create account
-          </a>
-        </div>
-
-        <p className="text-xs text-on-surface-variant">
-          Free to join · No credit card required
-        </p>
-      </div>
-    </div>
-  );
-}
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
@@ -138,7 +25,6 @@ export default function ExploreActivities() {
   const [total, setTotal] = useState(0);
 
   const token = localStorage.getItem("token");
-  const isGuest = !token;
 
   // Filters
   const [selectedCategory, setSelectedCategory] = useState<

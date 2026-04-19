@@ -405,19 +405,6 @@ function FieldError({ msg }: { msg: string }) {
 
 // ─── Activity Form Modal ───────────────────────────────────────────────────────
 
-const EMPTY_FORM: CreateActivityData = {
-  title: "",
-  description: "",
-  location: "",
-  latitude: 36.8,
-  longitude: 10.18,
-  category: "CULTURE" as ActivityCategory,
-  price: 50,
-  capacity: 5,
-  date: new Date(Date.now() + 86400000).toISOString().slice(0, 16),
-  images: [],
-};
-
 type FormErrors = Partial<Record<keyof CreateActivityData, string>>;
 
 function validateForm(data: CreateActivityData): FormErrors {

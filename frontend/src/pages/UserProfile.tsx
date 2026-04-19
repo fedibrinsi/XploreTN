@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toImageUrl } from "../utils/imageUrl";
 
@@ -12,7 +12,8 @@ interface UserData {
   role: "CITOYEN" | "TOURISTE";
   image: string;
   bio: string | null;
-  review: string | null;
+  review?: string | null;
+  rating?: number;
   interests: string[];
   createdAt?: string;
 }
