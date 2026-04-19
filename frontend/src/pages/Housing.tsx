@@ -1129,10 +1129,80 @@ function ErrorBanner({
   );
 }
 
-// ─── Guest Banner ─────────────────────────────────────────────────────────────
+// ─── Guest Preview Overlay ────────────────────────────────────────────────────
+function GuestPreviewOverlay({ total }: { total: number }) {
+  return (
+    <div className="absolute inset-0 z-10 flex flex-col items-center justify-end pb-16 pointer-events-none">
+      <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/80 to-transparent" />
+      <div className="relative pointer-events-auto flex flex-col items-center gap-5 bg-surface-container-lowest border border-surface-container-high rounded-[2rem] px-10 py-8 shadow-2xl shadow-primary/10 max-w-md w-full mx-4 text-center">
+        <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+          <span className="material-symbols-outlined text-3xl text-primary">
+            lock
+          </span>
+        </div>
+        <div>
+          <h2 className="font-headline text-2xl font-bold text-primary mb-1">
+            Discover all homes
+          </h2>
+          <p className="text-on-surface-variant text-sm leading-relaxed">
+            Sign in to explore{" "}
+            <span className="font-semibold text-primary">{total}+</span>{" "}
+            authentic Tunisian homes and connect with local hosts.
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3 w-full">
+          <a
+            href="/auth"
+            className="flex-1 py-3.5 bg-primary text-on-primary rounded-xl text-sm font-bold uppercase tracking-wider text-center shadow-lg shadow-primary/25 hover:scale-[1.02] active:scale-95 transition-transform"
+          >
+            Sign in
+          </a>
+          <a
+            href="/auth?tab=register"
+            className="flex-1 py-3.5 bg-surface-container-high text-on-surface rounded-xl text-sm font-bold uppercase tracking-wider text-center hover:bg-surface-container-highest active:scale-95 transition-all"
+          >
+            Create account
+          </a>
+        </div>
+        <p className="text-xs text-on-surface-variant">
+          Free to join · No credit card required
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Guest Banner (avec preview des logements) ────────────────────────────────
 function GuestBanner() {
+  const [previewHousings, setPreviewHousings] = useState<Housing[]>([]);
+  const [loadingPreview, setLoadingPreview] = useState(true);
+  const BACKEND_URL = "http://localhost:5000";
+  const [totalHousings, setTotalHousings] = useState(0);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const { data } = await axios.get<Housing[]>(
+          "http://localhost:5000/api/housingSearch/search",
+        );
+        setPreviewHousings(Array.isArray(data) ? data.slice(0, 6) : []);
+      } catch {
+        setPreviewHousings([]);
+      } finally {
+        setLoadingPreview(false);
+      }
+    };
+    load();
+  }, []);
+
+  const resolveImage = (src: string) =>
+    src.startsWith("http") || src.startsWith("data:")
+      ? src
+      : `${BACKEND_URL}${src}`;
+
   return (
     <main className="pt-20 min-h-screen w-full bg-surface-container-low">
+      {/* Hero banner */}
       <div className="w-full min-h-[calc(100vh-80px)] flex flex-col">
         <div className="w-full h-[45vh] relative overflow-hidden">
           <img
@@ -1179,20 +1249,226 @@ function GuestBanner() {
               </span>
             ))}
           </div>
+        </div>
+      </div>
 
-          <a
-            href="/auth"
-            className="px-10 py-4 bg-primary text-on-primary rounded-xl text-sm font-bold uppercase tracking-wider shadow-md hover:scale-[1.02] active:scale-95 transition-transform"
-          >
-            Sign in to Explore Homes
-          </a>
+      {/* Layout sidebar + grille */}
+      <div className="px-4 md:px-8 max-w-7xl mx-auto pt-12 pb-32 flex flex-col lg:flex-row gap-8">
+        {/* ── Sidebar locked ── */}
+        <div className="pointer-events-none opacity-60 shrink-0">
+          <aside className="w-72 self-start sticky top-28">
+            <div className="bg-surface-container-lowest rounded-[1.75rem] border border-surface-variant/20 shadow-lg shadow-primary/5 overflow-hidden">
+              <div className="px-6 py-5 border-b border-surface-variant/20 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary text-lg">
+                    tune
+                  </span>
+                  <h2 className="font-headline text-base font-bold text-primary">
+                    Filters
+                  </h2>
+                </div>
+              </div>
+              <div className="p-6 space-y-7">
+                {/* Location */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+                    Location
+                  </label>
+                  <div className="w-full bg-surface-container-low border border-surface-variant/50 rounded-xl px-4 py-3 text-sm text-outline-variant">
+                    City or region…
+                  </div>
+                </div>
 
-          <p className="text-sm text-outline text-center">
-            New here?{" "}
-            <a href="/auth" className="text-primary font-bold underline">
-              Create a free account
-            </a>
-          </p>
+                {/* Housing Type */}
+                <div className="space-y-3">
+                  <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+                    Housing Type
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {(
+                      [
+                        "APARTMENT",
+                        "VILLA",
+                        "STUDIO",
+                        "TRADITIONAL_HOUSE",
+                        "FARM_STAY",
+                        "GUESTHOUSE",
+                        "RIAD",
+                        "CHALET",
+                      ] as HousingType[]
+                    ).map((t) => (
+                      <span
+                        key={t}
+                        className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-bold border bg-surface-container-low border-surface-variant/40 text-on-surface-variant"
+                      >
+                        {HOUSING_TYPE_LABELS[t]}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Rooms slider fake */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+                      Rooms
+                    </span>
+                    <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                      1 – 20
+                    </span>
+                  </div>
+                  <div className="relative h-1.5 bg-surface-container-high rounded-full">
+                    <div
+                      className="absolute h-full bg-primary rounded-full"
+                      style={{ left: "0%", right: "0%" }}
+                    />
+                  </div>
+                </div>
+
+                {/* Guests slider fake */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+                      Guests
+                    </span>
+                    <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                      1 – 20
+                    </span>
+                  </div>
+                  <div className="relative h-1.5 bg-surface-container-high rounded-full">
+                    <div
+                      className="absolute h-full bg-primary rounded-full"
+                      style={{ left: "0%", right: "0%" }}
+                    />
+                  </div>
+                </div>
+
+                {/* Stay duration slider fake */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+                      Stay Duration
+                    </span>
+                    <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                      1 Day – 1 Year
+                    </span>
+                  </div>
+                  <div className="relative h-1.5 bg-surface-container-high rounded-full">
+                    <div
+                      className="absolute h-full bg-primary rounded-full"
+                      style={{ left: "0%", right: "0%" }}
+                    />
+                  </div>
+                </div>
+
+                {/* Sort fake */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+                    Sort By
+                  </label>
+                  <div className="w-full bg-surface-container-low border border-surface-variant/40 rounded-xl px-4 py-2.5 text-sm text-on-surface-variant">
+                    Newest First
+                  </div>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        {/* ── Grille + overlay ── */}
+        <div className="flex-1 min-w-0">
+          <div className="mb-8">
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-tertiary mb-2">
+              Available Homes
+            </p>
+            <h2 className="font-headline text-3xl font-black text-primary">
+              Explore Our Listings
+            </h2>
+          </div>
+
+          <div className="relative">
+            {loadingPreview ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <SkeletonCard key={i} />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pointer-events-none select-none">
+                {previewHousings.map((h) => (
+                  <article
+                    key={h.id}
+                    className="bg-surface-container-lowest rounded-[2rem] overflow-hidden shadow-lg border border-surface-variant/20 flex flex-col"
+                  >
+                    <div className="relative h-52 overflow-hidden">
+                      {h.images[0] ? (
+                        <img
+                          src={resolveImage(h.images[0])}
+                          alt={h.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-surface-container-high flex items-center justify-center">
+                          <span className="material-symbols-outlined text-5xl text-outline-variant">
+                            home
+                          </span>
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                      <span className="absolute top-4 left-4 bg-white/90 backdrop-blur-md text-primary text-xs font-bold px-3 py-1.5 rounded-full shadow">
+                        {HOUSING_TYPE_LABELS[h.type]}
+                      </span>
+                      <span className="absolute top-4 right-4 flex items-center gap-1.5 bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+                        <span className="w-1.5 h-1.5 rounded-full bg-white/80 animate-pulse" />
+                        Available
+                      </span>
+                    </div>
+                    <div className="p-6 flex flex-col flex-1 gap-4">
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-tertiary flex items-center gap-1 mb-1">
+                          <span className="material-symbols-outlined text-xs">
+                            location_on
+                          </span>
+                          {h.location}
+                        </p>
+                        <h3 className="font-headline text-xl font-bold text-primary leading-snug">
+                          {h.title}
+                        </h3>
+                        <p className="text-sm text-on-surface-variant mt-2 line-clamp-2 leading-relaxed">
+                          {h.description}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <span className="inline-flex items-center gap-1 bg-surface-container-high text-on-surface-variant text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full">
+                          <span className="material-symbols-outlined text-xs">
+                            bed
+                          </span>
+                          {h.rooms} Rooms
+                        </span>
+                        <span className="inline-flex items-center gap-1 bg-surface-container-high text-on-surface-variant text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full">
+                          <span className="material-symbols-outlined text-xs">
+                            layers
+                          </span>
+                          {h.floors} Floor{h.floors > 1 ? "s" : ""}
+                        </span>
+                        <span className="inline-flex items-center gap-1 bg-surface-container-high text-on-surface-variant text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full">
+                          <span className="material-symbols-outlined text-xs">
+                            people
+                          </span>
+                          {h.familyMembers} Host{h.familyMembers > 1 ? "s" : ""}
+                        </span>
+                      </div>
+                      <div className="h-10 bg-primary/10 rounded-xl mt-auto" />
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+
+            {!loadingPreview && previewHousings.length > 0 && (
+              <GuestPreviewOverlay total={totalHousings} />
+            )}
+          </div>
         </div>
       </div>
     </main>

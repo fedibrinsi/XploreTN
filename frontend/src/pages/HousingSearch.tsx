@@ -5,7 +5,6 @@ import { LocationAutocomplete } from "./LocationAutocomplete";
 import { createDM } from "../types/messages";
 import housingImg from "../assets/housingSearch.jpg";
 
-
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface LocalUser {
@@ -405,9 +404,7 @@ function FilterSidebar({
 
   return (
     <aside className="w-72 shrink-0 self-start sticky top-28">
-      
       <div className="bg-surface-container-lowest rounded-[1.75rem] border border-surface-variant/20 shadow-lg shadow-primary/5 overflow-hidden">
-      
         <div className="px-6 py-5 border-b border-surface-variant/20 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-primary text-lg">
@@ -677,7 +674,8 @@ function HousingDetailModal({
       navigate("/messaging", {
         state: {
           targetConvId: conv.id,
-          autoMessage: `Bonjour ! Je suis intéressé(e) par votre logement « ${housing.title} » à ${housing.location} (${HOUSING_TYPE_LABELS[housing.type]}, ${housing.rooms} chambre${housing.rooms > 1 ? "s" : ""}, jusqu'à ${housing.maxTourists} voyageur${housing.maxTourists > 1 ? "s" : ""}). Serait-il possible d'organiser un séjour ? Merci !`,
+          autoMessage:
+            `Hello! I'm interested in your accommodation « ${housing.title} » in ${housing.location} (${HOUSING_TYPE_LABELS[housing.type]}, ${housing.rooms} bedroom${housing.rooms > 1 ? "s" : ""}, up to ${housing.maxTourists} traveler${housing.maxTourists > 1 ? "s" : ""}). Would it be possible to arrange a stay? Thank you`!,
         },
       });
 
@@ -698,7 +696,6 @@ function HousingDetailModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6">
-      
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
@@ -840,7 +837,7 @@ function HousingDetailModal({
                 Clicking{" "}
                 <span className="font-bold text-primary">Request a Stay</span>{" "}
                 will send a message to the host and create a reservation
-                request. 
+                request.
               </p>
             </div>
           )}

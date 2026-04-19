@@ -1,7 +1,6 @@
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
-  //previewFeatures = []
 }
 
 datasource db {
@@ -17,32 +16,37 @@ model User {
   password                 String
   role                     Role                      @default(TOURISTE)
   bio                      String?
+  review                   String?
+  rating                   Int?
   activities               Activity[]
+  activityReservations     ActivityReservation[]
   conversationParticipants ConversationParticipant[]
   housings                 Housing[]
   messages                 Message[]
   reservations             Reservation[]
-  activityReservations     ActivityReservation[]
+  notificationHousings     NotificationHousing[]
+  notificationActivities   NotificationActivity[]
 }
 
 model Activity {
-  id                   Int                   @id @default(autoincrement())
-  title                String
-  description          String
-  price                Float
-  date                 DateTime
-  location             String
-  latitude             Float
-  longitude            Float
-  images               String[]
-  status               ActivityStatus        @default(APPROVED)
-  capacity             Int
-  category             ActivityCategory
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
-  creatorId            Int
-  creator              User                  @relation(fields: [creatorId], references: [id])
-  activityReservations ActivityReservation[]
+  id                     Int                    @id @default(autoincrement())
+  title                  String
+  description            String
+  price                  Float
+  date                   DateTime
+  location               String
+  latitude               Float
+  longitude              Float
+  images                 String[]
+  status                 ActivityStatus         @default(APPROVED)
+  capacity               Int
+  category               ActivityCategory
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+  creatorId              Int
+  creator                User                   @relation(fields: [creatorId], references: [id])
+  activityReservations   ActivityReservation[]
+  notificationActivities NotificationActivity[]
 
   @@index([location])
   @@index([date])
@@ -52,24 +56,25 @@ model Activity {
 }
 
 model Housing {
-  id            String        @id @default(uuid())
-  title         String
-  description   String
-  location      String
-  latitude      Float         @default(36.8065)
-  longitude     Float         @default(10.1815)
-  type          HousingType
-  floors        Int
-  rooms         Int
-  familyMembers Int
-  maxTourists   Int
-  maxStayDays   Int
-  images        String[]
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  ownerId       Int
-  owner         User          @relation(fields: [ownerId], references: [id])
-  reservations  Reservation[]
+  id                   String                @id @default(uuid())
+  title                String
+  description          String
+  location             String
+  type                 HousingType
+  floors               Int
+  rooms                Int
+  familyMembers        Int
+  maxTourists          Int
+  maxStayDays          Int
+  images               String[]
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  ownerId              Int
+  latitude             Float                 @default(36.8065)
+  longitude            Float                 @default(10.1815)
+  owner                User                  @relation(fields: [ownerId], references: [id])
+  reservations         Reservation[]
+  notificationHousings NotificationHousing[]
 }
 
 model Place {
@@ -131,18 +136,37 @@ model Message {
 }
 
 model Reservation {
-  id        String            @id @default(uuid())
-  housingId String
-  touristId Int
-  status    ReservationStatus @default(PENDING)
-  startDate DateTime
-  endDate   DateTime
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
-  housing   Housing           @relation(fields: [housingId], references: [id], onDelete: Cascade)
-  tourist   User              @relation(fields: [touristId], references: [id], onDelete: Cascade)
+  id                   String                @id @default(uuid())
+  housingId            String
+  touristId            Int
+  status               ReservationStatus     @default(PENDING)
+  startDate            DateTime
+  endDate              DateTime
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  housing              Housing               @relation(fields: [housingId], references: [id], onDelete: Cascade)
+  tourist              User                  @relation(fields: [touristId], references: [id], onDelete: Cascade)
+  notificationHousings NotificationHousing[]
 
   @@index([housingId])
+  @@index([touristId])
+  @@index([status])
+}
+
+model ActivityReservation {
+  id                     String                 @id @default(uuid())
+  activityId             Int
+  touristId              Int
+  guests                 Int                    @default(1)
+  notes                  String?
+  status                 ReservationStatus      @default(PENDING)
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+  activity               Activity               @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  tourist                User                   @relation(fields: [touristId], references: [id], onDelete: Cascade)
+  notificationActivities NotificationActivity[]
+
+  @@index([activityId])
   @@index([touristId])
   @@index([status])
 }
@@ -201,19 +225,52 @@ enum ReservationStatus {
   COMPLETED
 }
 
-model ActivityReservation {
-  id         String            @id @default(uuid())
-  activityId Int
-  touristId  Int
-  guests     Int               @default(1)
-  notes      String?
-  status     ReservationStatus @default(PENDING)
-  createdAt  DateTime          @default(now())
-  updatedAt  DateTime          @updatedAt
-  activity   Activity          @relation(fields: [activityId], references: [id], onDelete: Cascade)
-  tourist    User              @relation(fields: [touristId], references: [id], onDelete: Cascade)
+model NotificationHousing {
+  id            String                  @id @default(uuid())
+  userId        Int
+  housingId     String
+  reservationId String
+  type          NotificationHousingType
+  isRead        Boolean                 @default(false)
+  createdAt     DateTime                @default(now())
+  user          User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  housing       Housing                 @relation(fields: [housingId], references: [id], onDelete: Cascade)
+  reservation   Reservation             @relation(fields: [reservationId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
+  @@index([housingId])
+  @@index([isRead])
+}
+
+model NotificationActivity {
+  id            String                   @id @default(uuid())
+  userId        Int
+  activityId    Int
+  reservationId String
+  type          NotificationActivityType
+  isRead        Boolean                  @default(false)
+  createdAt     DateTime                 @default(now())
+  user          User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activity      Activity                 @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  reservation   ActivityReservation      @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
   @@index([activityId])
-  @@index([touristId])
-  @@index([status])
+  @@index([isRead])
+}
+
+enum NotificationHousingType {
+  RESERVATION_REQUESTED // owner reçoit : un touriste a demandé une réservation
+  RESERVATION_ACCEPTED // touriste reçoit : sa réservation a été acceptée
+  RESERVATION_REJECTED // touriste reçoit : sa réservation a été refusée
+  RESERVATION_CANCELLED // owner reçoit : un touriste a annulé sa réservation
+  RESERVATION_COMPLETED // touriste reçoit : son séjour est marqué comme terminé
+}
+
+enum NotificationActivityType {
+  RESERVATION_REQUESTED // creator reçoit : un touriste a demandé une réservation
+  RESERVATION_ACCEPTED // touriste reçoit : sa réservation a été acceptée
+  RESERVATION_REJECTED // touriste reçoit : sa réservation a été refusée
+  RESERVATION_CANCELLED // creator reçoit : un touriste a annulé sa réservation
+  RESERVATION_COMPLETED // touriste reçoit : son activité est marquée comme terminée
 }

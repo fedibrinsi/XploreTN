@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import prisma from "../prisma";
 import { authenticateJWT, AuthRequest } from "../middleware/auth";
+import { createActivityNotification } from "./notifications";
 
 const router = express.Router();
 
@@ -18,11 +19,9 @@ router.post("/", authenticateJWT, async (req: Request, res: Response) => {
     if (!activity)
       return res.status(404).json({ message: "Activité introuvable." });
     if (activity.creatorId === touristId)
-      return res
-        .status(403)
-        .json({
-          message: "Vous ne pouvez pas réserver votre propre activité.",
-        });
+      return res.status(403).json({
+        message: "Vous ne pouvez pas réserver votre propre activité.",
+      });
     const existing = await prisma.activityReservation.findFirst({
       where: {
         activityId: Number(activityId),
@@ -66,7 +65,7 @@ router.post("/", authenticateJWT, async (req: Request, res: Response) => {
         },
       });
     }
-    const autoMessage = `Bonjour ! Je souhaite réserver l'activité « ${activity.title} » prévue le ${new Date(activity.date).toLocaleDateString("fr-FR", { weekday: "long", year: "numeric", month: "long", day: "numeric" })} à ${activity.location}. Nombre de participants : ${guests}. ${notes ? `\nNote : ${notes}` : ""}Pourriez-vous confirmer ma réservation ? Merci !`;
+    const autoMessage = `Hello! I would like to book the activity « ${activity.title} » scheduled for ${new Date(activity.date).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })} in ${activity.location}. Number of participants: ${guests}. ${notes ? `\nNote: ${notes}` : ""}Could you please confirm my booking? Thank you!`;
     await prisma.message.create({
       data: {
         conversationId: conversation.id,
@@ -78,6 +77,12 @@ router.post("/", authenticateJWT, async (req: Request, res: Response) => {
     await prisma.conversation.update({
       where: { id: conversation.id },
       data: { updatedAt: new Date() },
+    });
+    await createActivityNotification({
+      userId: activity.creatorId,
+      activityId: Number(activityId),
+      reservationId: reservation.id,
+      type: "RESERVATION_REQUESTED",
     });
     return res.status(201).json({
       message: "Réservation créée et message envoyé.",
@@ -203,6 +208,7 @@ router.patch(
       const reservationId = String(req.params.id);
       const reservation = await prisma.activityReservation.findUnique({
         where: { id: reservationId },
+        include: { activity: true },
       });
       if (!reservation)
         return res.status(404).json({ message: "Réservation introuvable." });
@@ -215,6 +221,12 @@ router.patch(
       const updated = await prisma.activityReservation.update({
         where: { id: reservationId },
         data: { status: "CANCELLED" },
+      });
+      await createActivityNotification({
+        userId: reservation.activity.creatorId,
+        activityId: reservation.activityId,
+        reservationId: reservation.id,
+        type: "RESERVATION_CANCELLED",
       });
       return res.json({
         message: "Réservation annulée.",
@@ -288,6 +300,15 @@ router.patch(
         where: { id: reservationId },
         data: { status },
       });
+      await createActivityNotification({
+        userId: reservation.touristId,
+        activityId: reservation.activityId,
+        reservationId: reservation.id,
+        type:
+          status === "ACCEPTED"
+            ? "RESERVATION_ACCEPTED"
+            : "RESERVATION_REJECTED",
+      });
       return res.json({
         message:
           status === "ACCEPTED"
@@ -325,6 +346,12 @@ router.patch(
       const updated = await prisma.activityReservation.update({
         where: { id: reservationId },
         data: { status: "COMPLETED" },
+      });
+      await createActivityNotification({
+        userId: reservation.touristId,
+        activityId: reservation.activityId,
+        reservationId: reservation.id,
+        type: "RESERVATION_COMPLETED",
       });
       return res.json({
         message: "Activité marquée comme complétée.",

@@ -14,86 +14,126 @@ import activityImg from "../assets/activity.jpg";
 
 function GuestBanner() {
   return (
-    <main className="pt-20 min-h-screen w-full bg-surface-container-low">
-      <div className="w-full min-h-[calc(100vh-80px)] flex flex-col">
-        {/* Hero Image */}
-        <div className="relative w-full h-[55vh] overflow-hidden">
-          <img
-            src={activityImg}
-            alt="Discover Tunisia with locals"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-black/50" />
+    <div className="w-full">
+      <div className="relative w-full h-[55vh] overflow-hidden">
+        <img
+          src={activityImg}
+          alt="Discover Tunisia with locals"
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-black/50" />
+      </div>
+
+      <div className="w-full bg-surface px-6 md:px-20 py-14 flex flex-col items-center justify-center gap-6">
+        <div className="flex items-center gap-1.5 bg-amber-50 rounded-full px-4 py-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
+          <span className="text-[11px] font-semibold text-amber-800 uppercase tracking-wide">
+            Authentic Tunisian Experiences
+          </span>
         </div>
 
-        {/* Content Below Image */}
-        <div className="flex-1 w-full bg-surface px-6 md:px-20 py-14 flex flex-col items-center justify-center gap-6">
-          <div className="flex items-center gap-1.5 bg-amber-50 rounded-full px-4 py-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
-            <span className="text-[11px] font-semibold text-amber-800 uppercase tracking-wide">
-              Authentic Tunisian Experiences
-            </span>
-          </div>
+        <div className="text-center max-w-2xl">
+          <h1 className="font-headline text-4xl md:text-5xl italic text-primary leading-tight mb-4">
+            Explore Tunisia,
+            <br />
+            One Experience at a Time
+          </h1>
+          <p className="text-lg text-on-surface-variant leading-relaxed">
+            Join local Tunisian citizens for unique activities — share a coffee,
+            discover hidden places, and take part in unforgettable local
+            adventures.
+          </p>
+        </div>
 
-          <div className="text-center max-w-2xl">
-            <h1 className="font-headline text-4xl md:text-5xl italic text-primary leading-tight mb-4">
-              Explore Tunisia,
-              <br />
-              One Experience at a Time
-            </h1>
-            <p className="text-lg text-on-surface-variant leading-relaxed">
-              Join local Tunisian citizens for unique activities — share a
-              coffee, discover hidden places, and take part in unforgettable
-              local adventures.
-            </p>
-          </div>
-
-          {/* Activity Pills */}
-          <div className="flex flex-wrap justify-center gap-3 mt-2">
-            {[
-              { icon: "coffee", label: "Share a Coffee" },
-              { icon: "explore", label: "Discover Hidden Places" },
-              { icon: "groups", label: "Join Local Activities" },
-              { icon: "hiking", label: "Outdoor Adventures" },
-              { icon: "palette", label: "Cultural Workshops" },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="flex items-center gap-2 px-4 py-2 bg-[#003873]/8 border border-[#003873]/15 rounded-full"
-              >
-                <span className="material-symbols-outlined text-[16px] text-primary">
-                  {item.icon}
-                </span>
-                <span className="text-sm font-medium text-primary">
-                  {item.label}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          <a
-            href="/auth"
-            className="mt-2 px-10 py-4 bg-primary text-on-primary rounded-xl text-sm font-bold uppercase tracking-wider shadow-md hover:scale-[1.02] active:scale-95 transition-transform"
-          >
-            Sign in to Explore Activities
-          </a>
+        <div className="flex flex-wrap justify-center gap-3 mt-2">
+          {[
+            { icon: "coffee", label: "Share a Coffee" },
+            { icon: "explore", label: "Discover Hidden Places" },
+            { icon: "groups", label: "Join Local Activities" },
+            { icon: "hiking", label: "Outdoor Adventures" },
+            { icon: "palette", label: "Cultural Workshops" },
+          ].map((item) => (
+            <div
+              key={item.label}
+              className="flex items-center gap-2 px-4 py-2 bg-[#003873]/8 border border-[#003873]/15 rounded-full"
+            >
+              <span className="material-symbols-outlined text-[16px] text-primary">
+                {item.icon}
+              </span>
+              <span className="text-sm font-medium text-primary">
+                {item.label}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
-    </main>
+    </div>
   );
 }
+
+// ─── Guest Preview Overlay CTA ────────────────────────────────────────────────
+
+function GuestPreviewOverlay({ total }: { total: number }) {
+  return (
+    <div className="absolute inset-0 z-10 flex flex-col items-center justify-end pb-16 pointer-events-none">
+      {/* Gradient fade from transparent → solid surface */}
+      <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/80 to-transparent" />
+
+      {/* CTA card — re-enable pointer events just for this */}
+      <div className="relative pointer-events-auto flex flex-col items-center gap-5 bg-surface-container-lowest border border-surface-container-high rounded-[2rem] px-10 py-8 shadow-2xl shadow-primary/10 max-w-md w-full mx-4 text-center">
+        {/* Lock icon */}
+        <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+          <span className="material-symbols-outlined text-3xl text-primary">
+            lock
+          </span>
+        </div>
+
+        <div>
+          <h2 className="font-headline text-2xl font-bold text-on-surface mb-1">
+            Unlock all experiences
+          </h2>
+          <p className="text-on-surface-variant text-sm leading-relaxed">
+            Sign in to explore{" "}
+            <span className="font-semibold text-primary">{total}+</span> curated
+            activities and book with local hosts across Tunisia.
+          </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3 w-full">
+          <a
+            href="/auth"
+            className="flex-1 py-3.5 bg-primary text-on-primary rounded-xl text-sm font-bold uppercase tracking-wider text-center shadow-lg shadow-primary/25 hover:scale-[1.02] active:scale-95 transition-transform"
+          >
+            Sign in
+          </a>
+          <a
+            href="/auth?tab=register"
+            className="flex-1 py-3.5 bg-surface-container-high text-on-surface rounded-xl text-sm font-bold uppercase tracking-wider text-center hover:bg-surface-container-highest active:scale-95 transition-all"
+          >
+            Create account
+          </a>
+        </div>
+
+        <p className="text-xs text-on-surface-variant">
+          Free to join · No credit card required
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function ExploreActivities() {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // ─── State ──────────────────────────────────────────────────────────────
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [total, setTotal] = useState(0);
 
   const token = localStorage.getItem("token");
-  if (!token) return <GuestBanner />;
+  const isGuest = !token;
 
   // Filters
   const [selectedCategory, setSelectedCategory] = useState<
@@ -103,11 +143,10 @@ export default function ExploreActivities() {
   const { localPrice, setLocalPrice } = useDebouncedPrice(
     maxPrice,
     (price) => setMaxPrice(price),
-    300, // Debounce delay in ms
+    300,
   );
   const [sortBy, setSortBy] = useState("newest");
 
-  // ─── Fetch activities whenever filters change ───────────────────────────
   useEffect(() => {
     const load = async () => {
       setLoading(true);
@@ -120,7 +159,6 @@ export default function ExploreActivities() {
         const result = await fetchActivities(filters);
         const sorted = result.activities;
 
-        // Client-side sort
         if (sortBy === "newest")
           sorted.sort(
             (a, b) =>
@@ -140,7 +178,6 @@ export default function ExploreActivities() {
     load();
   }, [selectedCategory, maxPrice, sortBy]);
 
-  // ─── Category select handler ────────────────────────────────────────────
   const handleCategorySelect = (cat: ActivityCategory | "") => {
     setSelectedCategory(cat);
     if (cat) {
@@ -150,247 +187,324 @@ export default function ExploreActivities() {
     }
   };
 
-  // ─── All category keys for filter buttons ─────────────────────────────
   const allCategories = Object.keys(CATEGORY_CONFIG) as ActivityCategory[];
 
-  // ─── Render a single activity card ────────────────────────────────────
+  // ─── Render Card ──────────────────────────────────────────────────────────
   const renderCard = (activity: Activity, index: number) => {
     const catConfig = CATEGORY_CONFIG[activity.category];
-    const isLarge = index === 2; // Third card spans full width
+    const isLarge = index === 2;
     const formattedDate = new Date(activity.date).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
     });
 
-    if (isLarge) {
-      return (
-        <article
-          key={activity.id}
-          className="lg:col-span-2 group relative bg-surface-container-lowest rounded-[2.5rem] overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 flex flex-col md:flex-row"
-        >
-          <Link
-            to={`/experience/${activity.id}`}
-            className="w-full flex flex-col md:flex-row"
-          >
-            <div className="w-full md:w-2/5 relative overflow-hidden">
-              <img
-                alt={activity.title}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                src={
-                  activity.images[0] ||
-                  "https://placehold.co/800x600?text=No+Image"
-                }
-              />
-              <div className="absolute inset-0 bg-linear-to-r from-black/40 to-transparent md:block hidden" />
-              <div className="absolute top-6 left-6 flex items-center gap-2">
-                <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-1 shadow-sm">
-                  <span className="text-xs font-bold text-on-surface-variant uppercase tracking-tighter">
-                    Full Day
-                  </span>
-                  <span className="text-lg font-black text-primary">
-                    {activity.price} TND
-                  </span>
-                </div>
-                <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm text-xs font-bold text-on-surface-variant">
-                  <span className="material-symbols-outlined text-[14px]">
-                    calendar_today
-                  </span>
-                  {formattedDate}
-                </div>
-              </div>
-            </div>
-            <div className="w-full md:w-3/5 p-10 flex flex-col justify-center">
-              <div className="flex items-center gap-2 text-xs font-bold text-primary uppercase tracking-[0.2em] mb-4">
-                <span className="material-symbols-outlined text-sm">
-                  {catConfig.icon}
-                </span>
-                {catConfig.label}
-              </div>
-              <h3 className="font-headline text-4xl font-bold text-on-surface mb-4 group-hover:text-primary transition-colors leading-tight">
-                {activity.title}
-              </h3>
-              <p className="text-on-surface-variant leading-relaxed mb-8 text-lg">
-                {activity.description}
-              </p>
-              <div className="flex flex-wrap items-center gap-8 mb-8">
-                <div className="flex flex-col">
-                  <span className="text-xs text-on-surface-variant font-bold uppercase tracking-widest mb-1">
-                    Location
-                  </span>
-                  <span className="text-sm font-medium">
-                    {activity.location}
-                  </span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs text-on-surface-variant font-bold uppercase tracking-widest mb-1">
-                    Capacity
-                  </span>
-                  <span className="text-sm font-medium">
-                    Up to {activity.capacity} people
-                  </span>
-                </div>
-              </div>
-              <button className="self-start px-8 py-3 rounded-full bg-primary text-white font-bold hover:bg-primary-container transition-colors">
-                Explore Experience
-              </button>
-            </div>
-          </Link>
-        </article>
-      );
-    }
-
-    return (
+    const cardContent = isLarge ? (
       <article
         key={activity.id}
-        className="group relative bg-surface-container-lowest rounded-[2.5rem] overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10"
+        className={`lg:col-span-2 group relative bg-surface-container-lowest rounded-[2.5rem] overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 flex flex-col md:flex-row ${
+          isGuest ? "cursor-default select-none" : ""
+        }`}
       >
-        <Link to={`/experience/${activity.id}`}>
-          <div className="aspect-4/5 relative overflow-hidden">
+        <div className="w-full flex flex-col md:flex-row">
+          <div className="w-full md:w-2/5 relative overflow-hidden">
             <img
               alt={activity.title}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
               src={
                 activity.images[0] ||
-                "https://placehold.co/800x1000?text=No+Image"
+                "https://placehold.co/800x600?text=No+Image"
               }
             />
-            <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent" />
-            <div className="absolute top-6 right-6 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-1 shadow-sm">
-              <span className="text-xs font-bold text-on-surface-variant uppercase tracking-tighter">
-                From
-              </span>
-              <span className="text-lg font-black text-primary">
-                {activity.price} TND
-              </span>
-            </div>
-            <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm text-xs font-bold text-on-surface-variant">
-              <span className="material-symbols-outlined text-[14px]">
-                calendar_today
-              </span>
-              {formattedDate}
-            </div>
-            <div className="absolute bottom-6 left-6 flex items-center gap-2 bg-tertiary-fixed text-on-tertiary-fixed-variant px-3 py-1.5 rounded-full text-xs font-bold">
-              <span className="material-symbols-outlined text-sm">
-                {catConfig.icon}
-              </span>
-              {catConfig.label}
+            <div className="absolute inset-0 bg-linear-to-r from-black/40 to-transparent md:block hidden" />
+            <div className="absolute top-6 left-6 flex items-center gap-2">
+              <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-1 shadow-sm">
+                <span className="text-xs font-bold text-on-surface-variant uppercase tracking-tighter">
+                  Full Day
+                </span>
+                <span className="text-lg font-black text-primary">
+                  {activity.price} TND
+                </span>
+              </div>
+              <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm text-xs font-bold text-on-surface-variant">
+                <span className="material-symbols-outlined text-[14px]">
+                  calendar_today
+                </span>
+                {formattedDate}
+              </div>
             </div>
           </div>
-          <div className="p-8">
-            <div className="flex items-center gap-2 text-xs font-bold text-primary uppercase tracking-[0.2em] mb-3">
+          <div className="w-full md:w-3/5 p-10 flex flex-col justify-center">
+            <div className="flex items-center gap-2 text-xs font-bold text-primary uppercase tracking-[0.2em] mb-4">
               <span className="material-symbols-outlined text-sm">
                 {catConfig.icon}
               </span>
               {catConfig.label}
             </div>
-            <h3 className="font-headline text-3xl font-bold text-on-surface mb-3 group-hover:text-primary transition-colors">
+            <h3 className="font-headline text-4xl font-bold text-on-surface mb-4 group-hover:text-primary transition-colors leading-tight">
               {activity.title}
             </h3>
-            <p className="text-on-surface-variant line-clamp-2 leading-relaxed mb-6">
+            <p className="text-on-surface-variant leading-relaxed mb-8 text-lg">
               {activity.description}
             </p>
-            <div className="flex items-center gap-6 border-t border-surface-container-high pt-6">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-on-surface-variant">
-                  location_on
+            <div className="flex flex-wrap items-center gap-8 mb-8">
+              <div className="flex flex-col">
+                <span className="text-xs text-on-surface-variant font-bold uppercase tracking-widest mb-1">
+                  Location
                 </span>
                 <span className="text-sm font-medium">{activity.location}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-on-surface-variant">
-                  group
+              <div className="flex flex-col">
+                <span className="text-xs text-on-surface-variant font-bold uppercase tracking-widest mb-1">
+                  Capacity
                 </span>
                 <span className="text-sm font-medium">
-                  Max {activity.capacity}
+                  Up to {activity.capacity} people
                 </span>
               </div>
             </div>
+            {!isGuest && (
+              <button className="self-start px-8 py-3 rounded-full bg-primary text-white font-bold hover:bg-primary-container transition-colors">
+                Explore Experience
+              </button>
+            )}
           </div>
-        </Link>
+        </div>
       </article>
+    ) : (
+      <article
+        key={activity.id}
+        className={`group relative bg-surface-container-lowest rounded-[2.5rem] overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 ${
+          isGuest ? "cursor-default select-none" : ""
+        }`}
+      >
+        <div className="aspect-4/5 relative overflow-hidden">
+          <img
+            alt={activity.title}
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            src={
+              activity.images[0] ||
+              "https://placehold.co/800x1000?text=No+Image"
+            }
+          />
+          <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent" />
+          <div className="absolute top-6 right-6 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-1 shadow-sm">
+            <span className="text-xs font-bold text-on-surface-variant uppercase tracking-tighter">
+              From
+            </span>
+            <span className="text-lg font-black text-primary">
+              {activity.price} TND
+            </span>
+          </div>
+          <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm text-xs font-bold text-on-surface-variant">
+            <span className="material-symbols-outlined text-[14px]">
+              calendar_today
+            </span>
+            {formattedDate}
+          </div>
+          <div className="absolute bottom-6 left-6 flex items-center gap-2 bg-tertiary-fixed text-on-tertiary-fixed-variant px-3 py-1.5 rounded-full text-xs font-bold">
+            <span className="material-symbols-outlined text-sm">
+              {catConfig.icon}
+            </span>
+            {catConfig.label}
+          </div>
+        </div>
+        <div className="p-8">
+          <div className="flex items-center gap-2 text-xs font-bold text-primary uppercase tracking-[0.2em] mb-3">
+            <span className="material-symbols-outlined text-sm">
+              {catConfig.icon}
+            </span>
+            {catConfig.label}
+          </div>
+          <h3 className="font-headline text-3xl font-bold text-on-surface mb-3 group-hover:text-primary transition-colors">
+            {activity.title}
+          </h3>
+          <p className="text-on-surface-variant line-clamp-2 leading-relaxed mb-6">
+            {activity.description}
+          </p>
+          <div className="flex items-center gap-6 border-t border-surface-container-high pt-6">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-on-surface-variant">
+                location_on
+              </span>
+              <span className="text-sm font-medium">{activity.location}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-on-surface-variant">
+                group
+              </span>
+              <span className="text-sm font-medium">
+                Max {activity.capacity}
+              </span>
+            </div>
+          </div>
+        </div>
+      </article>
+    );
+
+    // For authenticated users, wrap with Link as before
+    if (!isGuest) {
+      return (
+        <Link
+          key={activity.id}
+          to={`/experience/${activity.id}`}
+          className={isLarge ? "lg:col-span-2" : ""}
+        >
+          {cardContent}
+        </Link>
+      );
+    }
+
+    // For guests, render non-interactive (no Link wrapper)
+    return (
+      <div key={activity.id} className={isLarge ? "lg:col-span-2" : ""}>
+        {cardContent}
+      </div>
     );
   };
 
-  return (
-    <div className="pt-28 pb-32 min-h-screen px-4 md:px-8 max-w-7xl mx-auto flex flex-col md:flex-row gap-8">
-      {/* Filter Sidebar */}
-      <aside className="w-full md:w-80 shrink-0">
+  // ─── Sidebar (shared for guests and authed users) ─────────────────────────
+  const sidebar = (
+    <aside className="w-full md:w-80 shrink-0">
+      <div
+        className="sticky top-28 bg-surface-container-low rounded-4xl flex flex-col"
+        style={{ maxHeight: "calc(100vh - 8rem)" }}
+      >
+        <div className="absolute inset-0 arabesque-pattern pointer-events-none rounded-4xl" />
         <div
-          className="sticky top-28 bg-surface-container-low rounded-4xl flex flex-col"
-          style={{ maxHeight: "calc(100vh - 8rem)" }}
+          className="relative z-10 p-8 overflow-y-auto"
+          style={{
+            scrollbarWidth: "thin",
+            scrollbarColor: "var(--color-primary) transparent",
+          }}
         >
-          <div className="absolute inset-0 arabesque-pattern pointer-events-none rounded-4xl"></div>
-          <div
-            className="relative z-10 p-8 overflow-y-auto"
-            style={{
-              scrollbarWidth: "thin",
-              scrollbarColor: "var(--color-primary) transparent",
-            }}
-          >
-            <h2 className="font-headline text-2xl font-bold mb-8 text-primary">
-              Refine Your Search
-            </h2>
-            <div className="space-y-8">
-              {/* Categories */}
-              <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-4">
-                  Experience Category
-                </p>
-                <div className="flex flex-wrap gap-2">
+          <h2 className="font-headline text-2xl font-bold mb-8 text-primary">
+            Refine Your Search
+          </h2>
+          <div className="space-y-8">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-4">
+                Experience Category
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => handleCategorySelect("")}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                    selectedCategory === ""
+                      ? "bg-primary text-white"
+                      : "bg-white text-on-surface hover:bg-secondary-container"
+                  }`}
+                >
+                  All Activities
+                </button>
+                {allCategories.map((cat) => (
                   <button
-                    onClick={() => handleCategorySelect("")}
+                    key={cat}
+                    onClick={() => handleCategorySelect(cat)}
                     className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                      selectedCategory === ""
+                      selectedCategory === cat
                         ? "bg-primary text-white"
                         : "bg-white text-on-surface hover:bg-secondary-container"
                     }`}
                   >
-                    All Activities
+                    <span className="material-symbols-outlined text-sm">
+                      {CATEGORY_CONFIG[cat].icon}
+                    </span>
+                    {CATEGORY_CONFIG[cat].label}
                   </button>
-                  {allCategories.map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => handleCategorySelect(cat)}
-                      className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                        selectedCategory === cat
-                          ? "bg-primary text-white"
-                          : "bg-white text-on-surface hover:bg-secondary-container"
-                      }`}
-                    >
-                      <span className="material-symbols-outlined text-sm">
-                        {CATEGORY_CONFIG[cat].icon}
-                      </span>
-                      {CATEGORY_CONFIG[cat].label}
-                    </button>
-                  ))}
-                </div>
+                ))}
               </div>
-
-              {/* Price Range */}
-              <PriceRangeSlider
-                value={localPrice}
-                onLocalChange={setLocalPrice}
-                min={20}
-                max={500}
-              />
-
-              <button
-                onClick={() => {
-                  handleCategorySelect("");
-                  setMaxPrice(500);
-                  setLocalPrice(500);
-                }}
-                className="w-full py-4 rounded-full bg-linear-to-br from-[#003873] to-[#1D4F91] text-white font-bold text-sm shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all mb-4"
-              >
-                Reset Filters
-              </button>
             </div>
+
+            <PriceRangeSlider
+              value={localPrice}
+              onLocalChange={setLocalPrice}
+              min={20}
+              max={500}
+            />
+
+            <button
+              onClick={() => {
+                handleCategorySelect("");
+                setMaxPrice(500);
+                setLocalPrice(500);
+              }}
+              className="w-full py-4 rounded-full bg-linear-to-br from-[#003873] to-[#1D4F91] text-white font-bold text-sm shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all mb-4"
+            >
+              Reset Filters
+            </button>
           </div>
         </div>
-      </aside>
+      </div>
+    </aside>
+  );
 
-      {/* Content Area */}
+  // ─── Guest View ────────────────────────────────────────────────────────────
+  if (isGuest) {
+    const previewActivities = activities.slice(0, 4);
+
+    return (
+      <main className="pt-20 min-h-screen w-full bg-surface-container-low">
+        <GuestBanner />
+
+        <div className="pt-10 pb-32 px-4 md:px-8 max-w-7xl mx-auto flex flex-col md:flex-row gap-8">
+          {/* Sidebar — visible but interactions are cosmetic for guests */}
+          <div className="pointer-events-none opacity-60">{sidebar}</div>
+
+          {/* Content */}
+          <section className="flex-1">
+            <div className="flex flex-col md:flex-row justify-between items-baseline mb-12 gap-4">
+              <div>
+                <h1 className="font-headline text-5xl font-black text-primary leading-tight">
+                  Curated Experiences
+                </h1>
+                <p className="text-on-surface-variant mt-2 text-lg">
+                  {total} experience{total !== 1 ? "s" : ""} found across
+                  Tunisia.
+                </p>
+              </div>
+            </div>
+
+            {/* Loading skeleton */}
+            {loading && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className={`${i === 3 ? "lg:col-span-2" : ""} bg-surface-container-lowest rounded-[2.5rem] overflow-hidden animate-pulse`}
+                  >
+                    <div className="aspect-4/5 bg-surface-container-high" />
+                    <div className="p-8 space-y-4">
+                      <div className="h-4 bg-surface-container-high rounded w-1/3" />
+                      <div className="h-8 bg-surface-container-high rounded w-2/3" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Preview grid + overlay */}
+            {!loading && previewActivities.length > 0 && (
+              <div className="relative">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {previewActivities.map((activity, index) =>
+                    renderCard(activity, index),
+                  )}
+                </div>
+                <GuestPreviewOverlay total={total} />
+              </div>
+            )}
+          </section>
+        </div>
+      </main>
+    );
+  }
+
+  // ─── Authenticated View ───────────────────────────────────────────────────
+  return (
+    <div className="pt-28 pb-32 min-h-screen px-4 md:px-8 max-w-7xl mx-auto flex flex-col md:flex-row gap-8">
+      {sidebar}
+
       <section className="flex-1">
         <div className="flex flex-col md:flex-row justify-between items-baseline mb-12 gap-4">
           <div>
@@ -415,7 +529,6 @@ export default function ExploreActivities() {
           </div>
         </div>
 
-        {/* Loading State */}
         {loading && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {[1, 2, 3].map((i) => (
@@ -434,7 +547,6 @@ export default function ExploreActivities() {
           </div>
         )}
 
-        {/* Error State */}
         {error && !loading && (
           <div className="text-center py-20">
             <span className="material-symbols-outlined text-6xl text-error mb-4">
@@ -444,7 +556,6 @@ export default function ExploreActivities() {
           </div>
         )}
 
-        {/* Empty State */}
         {!loading && !error && activities.length === 0 && (
           <div className="text-center py-20">
             <span className="material-symbols-outlined text-6xl text-on-surface-variant mb-4">
@@ -465,7 +576,6 @@ export default function ExploreActivities() {
           </div>
         )}
 
-        {/* Activities Grid */}
         {!loading && !error && activities.length > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {activities.map((activity, index) => renderCard(activity, index))}

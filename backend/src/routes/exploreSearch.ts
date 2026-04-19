@@ -2,12 +2,6 @@ import { Router, Request, Response } from "express";
 
 const router = Router();
 
-// ─── Config ────────────────────────────────────────────────────────────────────
-
-const MAPILLARY_CLIENT_TOKEN =
-  process.env.MAPILLARY_CLIENT_TOKEN ??
-  "MLY|26657365737250821|4b47e766b8036d791b04899ae6b6ec07";
-
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
 type PlaceCategory =
@@ -121,59 +115,7 @@ async function geocodeWithNominatim(
   }
 }
 
-// ─── Mapillary photo resolver ──────────────────────────────────────────────────
-
-/**
- * Cherche la photo Mapillary la plus proche des coordonnées du lieu.
- * Stratégie : rayon 50m d'abord, puis 150m si rien trouvé.
- * Retourne l'URL thumb_1024 ou null.
- */
-async function fetchMapillaryPhoto(
-  lat: number,
-  lng: number,
-): Promise<string | null> {
-  const radii = [50, 150];
-
-  for (const radius of radii) {
-    try {
-      const params = new URLSearchParams({
-        fields: "id,thumb_1024_url",
-        limit: "5",
-        closeto: `${lng},${lat}`, // Mapillary attend lon,lat
-        radius: String(radius),
-        sort_by: "closest",
-      });
-
-      const res = await fetch(`https://graph.mapillary.com/images?${params}`, {
-        headers: { Authorization: `OAuth ${MAPILLARY_CLIENT_TOKEN}` },
-      });
-
-      if (!res.ok) {
-        console.warn(`[mapillary] HTTP ${res.status} pour (${lat}, ${lng})`);
-        continue;
-      }
-
-      const json = (await res.json()) as {
-        data?: Array<{ id: string; thumb_1024_url?: string }>;
-      };
-
-      const images = json.data ?? [];
-      if (!images.length) continue;
-
-      const withThumb = images.find((img) => img.thumb_1024_url);
-      if (withThumb?.thumb_1024_url) return withThumb.thumb_1024_url;
-    } catch (err) {
-      console.error(
-        `[mapillary] Erreur (${lat}, ${lng}) rayon ${radius}m:`,
-        err,
-      );
-    }
-  }
-
-  return null;
-}
-
-// ─── Wikimedia Commons fallback ────────────────────────────────────────────────
+// ─── Wikimedia Commons image resolver ─────────────────────────────────────────
 
 async function resolveWikimediaImage(
   wikimediaTag: string | undefined,
@@ -194,9 +136,7 @@ async function resolveWikimediaImage(
     });
     const res = await fetch(
       `https://commons.wikimedia.org/w/api.php?${params}`,
-      {
-        headers: { "User-Agent": "XploreTN/1.0" },
-      },
+      { headers: { "User-Agent": "XploreTN/1.0" } },
     );
     if (!res.ok) return null;
     const data = (await res.json()) as {
@@ -237,6 +177,8 @@ async function fetchFromOverpass(
   radiusMeters: number,
   categories: PlaceCategory[],
 ): Promise<OverpassElement[]> {
+  if (categories.length === 0) return [];
+
   const filters = categories.flatMap((cat) =>
     CATEGORY_TO_OSM[cat].map(
       ({ key, value }) =>
@@ -249,7 +191,10 @@ async function fetchFromOverpass(
 
   const res = await fetch("https://overpass-api.de/api/interpreter", {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "User-Agent": "XploreTN/1.0 (contact@xploreTN.tn)",
+    },
     body: `data=${encodeURIComponent(query)}`,
   });
 
@@ -283,70 +228,71 @@ async function overpassToPlace(
   originLat: number,
   originLng: number,
 ): Promise<PlaceResult | null> {
-  const tags = el.tags ?? {};
-  const lat = el.lat ?? el.center?.lat;
-  const lng = el.lon ?? el.center?.lon;
-  if (lat == null || lng == null) return null;
+  try {
+    const tags = el.tags ?? {};
+    const lat = el.lat ?? el.center?.lat;
+    const lng = el.lon ?? el.center?.lon;
+    if (lat == null || lng == null) return null;
 
-  const name = tags.name || tags["name:fr"] || tags["name:ar"] || null;
-  if (!name) return null;
+    const name = tags.name || tags["name:fr"] || tags["name:ar"] || null;
+    if (!name) return null;
 
-  const category = osmTagToCategory(tags);
-  if (!category) return null;
+    const category = osmTagToCategory(tags);
+    if (!category) return null;
 
-  const distance = Math.round(haversineMeters(originLat, originLng, lat, lng));
+    const distance = Math.round(
+      haversineMeters(originLat, originLng, lat, lng),
+    );
 
-  const address =
-    [tags["addr:housenumber"], tags["addr:street"]].filter(Boolean).join(" ") ||
-    tags["addr:full"] ||
-    "";
-  const city =
-    tags["addr:city"] ?? tags["addr:town"] ?? tags["addr:village"] ?? "";
+    const address =
+      [tags["addr:housenumber"], tags["addr:street"]]
+        .filter(Boolean)
+        .join(" ") ||
+      tags["addr:full"] ||
+      "";
+    const city =
+      tags["addr:city"] ?? tags["addr:town"] ?? tags["addr:village"] ?? "";
 
-  const extraTags: string[] = [];
-  if (tags.cuisine)
-    extraTags.push(...tags.cuisine.split(";").map((s) => s.trim()));
-  if (tags.wheelchair === "yes") extraTags.push("Accessible");
-  if (tags.internet_access === "wlan") extraTags.push("Wi-Fi");
-  if (tags.outdoor_seating === "yes") extraTags.push("Terrasse");
-  if (tags.takeaway === "yes") extraTags.push("À emporter");
-  if (tags.delivery === "yes") extraTags.push("Livraison");
+    const extraTags: string[] = [];
+    if (tags.cuisine)
+      extraTags.push(...tags.cuisine.split(";").map((s) => s.trim()));
+    if (tags.wheelchair === "yes") extraTags.push("Accessible");
+    if (tags.internet_access === "wlan") extraTags.push("Wi-Fi");
+    if (tags.outdoor_seating === "yes") extraTags.push("Terrasse");
+    if (tags.takeaway === "yes") extraTags.push("À emporter");
+    if (tags.delivery === "yes") extraTags.push("Livraison");
 
-  // ── Résolution image : Mapillary → Wikimedia → tag image OSM → null ──────────
-  let image: string | null = null;
+    // ── Résolution image : Wikimedia → tag image OSM → null ──────────────────
+    let image: string | null = null;
 
-  // 1. Mapillary : photo réelle prise dans les 50–150m autour du lieu
-  image = await fetchMapillaryPhoto(lat, lng);
+    if (tags.wikimedia_commons) {
+      image = await resolveWikimediaImage(tags.wikimedia_commons);
+    }
+    if (!image && tags.image?.startsWith("http")) {
+      image = tags.image;
+    }
 
-  // 2. Wikimedia Commons (tag OSM wikimedia_commons)
-  if (!image && tags.wikimedia_commons) {
-    image = await resolveWikimediaImage(tags.wikimedia_commons);
+    return {
+      id: String(el.id),
+      name,
+      category,
+      address,
+      city,
+      distance,
+      rating: null,
+      reviewCount: null,
+      isOpen: null,
+      phone: tags.phone ?? tags["contact:phone"] ?? null,
+      website: tags.website ?? tags["contact:website"] ?? null,
+      tags: extraTags.slice(0, 5),
+      image,
+      lat,
+      lng,
+    };
+  } catch (err) {
+    console.error("[overpassToPlace] Error:", err);
+    return null;
   }
-
-  // 3. Tag image direct dans OSM
-  if (!image && tags.image?.startsWith("http")) {
-    image = tags.image;
-  }
-
-  // 4. null → frontend affiche l'icône de catégorie
-
-  return {
-    id: String(el.id),
-    name,
-    category,
-    address,
-    city,
-    distance,
-    rating: null,
-    reviewCount: null,
-    isOpen: null,
-    phone: tags.phone ?? tags["contact:phone"] ?? null,
-    website: tags.website ?? tags["contact:website"] ?? null,
-    tags: extraTags.slice(0, 5),
-    image,
-    lat,
-    lng,
-  };
 }
 
 // ─── Validation middleware ─────────────────────────────────────────────────────
@@ -365,11 +311,9 @@ function validateSearchQuery(
 
   const radiusNum = radius ? parseInt(radius, 10) : 1000;
   if (isNaN(radiusNum) || radiusNum < 50 || radiusNum > 50_000) {
-    res
-      .status(400)
-      .json({
-        error: "Le paramètre 'radius' doit être entre 50 et 50 000 mètres.",
-      });
+    res.status(400).json({
+      error: "Le paramètre 'radius' doit être entre 50 et 50 000 mètres.",
+    });
     return;
   }
 
@@ -432,16 +376,30 @@ router.get(
             .filter((c) => VALID_CATEGORIES.includes(c))
         : [...VALID_CATEGORIES];
 
+      if (parsedCategories.length === 0) {
+        res.status(400).json({ error: "Aucune catégorie valide fournie." });
+        return;
+      }
+
       const radiusMeters = parseInt(radius, 10);
       const maxResults = Math.min(parseInt(limit, 10) || 50, 200);
 
       // ── 3. Appel Overpass API ───────────────────────────────────────────────
+      console.log(
+        "[search] coords:",
+        coords,
+        "radius:",
+        radiusMeters,
+        "categories:",
+        parsedCategories,
+      );
       const elements = await fetchFromOverpass(
         coords.lat,
         coords.lng,
         radiusMeters,
         parsedCategories,
       );
+      console.log("[search] Overpass returned", elements.length, "elements");
 
       // ── 4. Dédupliquer ──────────────────────────────────────────────────────
       const seen = new Set<string>();
@@ -458,18 +416,30 @@ router.get(
         seen.add(key);
         rawPlaces.push(el);
       }
+      console.log("[search] After dedup:", rawPlaces.length, "places");
 
-      // ── 5. Résolution parallèle des photos + construction des lieux ─────────
-      // On limite avant les appels Mapillary pour éviter trop de requêtes
+      // ── 5. Résolution parallèle + construction des lieux ───────────────────
       const toResolve = rawPlaces.slice(0, maxResults);
 
-      const settled = await Promise.all(
+      const settled = await Promise.allSettled(
         toResolve.map((el) => overpassToPlace(el, coords!.lat, coords!.lng)),
       );
 
-      const places: PlaceResult[] = settled.filter(
-        (p): p is PlaceResult => p !== null,
-      );
+      // Log any individual failures
+      settled.forEach((r, i) => {
+        if (r.status === "rejected")
+          console.error(`[search] overpassToPlace[${i}] failed:`, r.reason);
+      });
+
+      const places: PlaceResult[] = settled
+        .filter(
+          (r): r is PromiseFulfilledResult<PlaceResult | null> =>
+            r.status === "fulfilled",
+        )
+        .map((r) => r.value)
+        .filter((p): p is PlaceResult => p !== null);
+
+      console.log("[search] Final places count:", places.length);
 
       // ── 6. Trier ────────────────────────────────────────────────────────────
       const validSort: SortOption = VALID_SORT.includes(sortBy as SortOption)
@@ -499,7 +469,10 @@ router.get("/:id", async (req: Request, res: Response): Promise<void> => {
 
     const response = await fetch("https://overpass-api.de/api/interpreter", {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "User-Agent": "XploreTN/1.0 (contact@xploreTN.tn)",
+      },
       body: `data=${encodeURIComponent(query)}`,
     });
 
@@ -521,10 +494,7 @@ router.get("/:id", async (req: Request, res: Response): Promise<void> => {
     const lng = el.lon ?? el.center?.lon;
 
     let image: string | null = null;
-    if (lat != null && lng != null) {
-      image = await fetchMapillaryPhoto(lat, lng);
-    }
-    if (!image && tags.wikimedia_commons) {
+    if (tags.wikimedia_commons) {
       image = await resolveWikimediaImage(tags.wikimedia_commons);
     }
     if (!image && tags.image?.startsWith("http")) {

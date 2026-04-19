@@ -19,6 +19,7 @@ import messageRouter from "./routes/message";
 import uploadRoutes from "./routes/upload";
 import reservationsRoute from "./routes/reservations";
 import activityReservationsRouter from "./routes/activityReservations";
+import notificationRouter from "./routes/notifications";
 
 dotenv.config();
 
@@ -41,5 +42,6 @@ app.use("/api/messages", messageRouter);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/reservations", reservationsRoute);
 app.use("/api/activity-reservations", activityReservationsRouter);
+app.use("/api/notifications", notificationRouter);
 
 export default app;

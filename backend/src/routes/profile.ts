@@ -148,4 +148,37 @@ router.post(
   },
 );
 
+// ─── PUT /api/profile/review ───────────────────────────────────────────────────
+router.put("/review", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user.id;
+    const { review } = req.body as { review?: string };
+
+    if (review !== undefined && review.length > 1000) {
+      return res
+        .status(400)
+        .json({ message: "La review ne peut pas dépasser 1000 caractères." });
+    }
+
+    const updated = await prisma.user.update({
+      where: { id: userId },
+      data: { review: review ?? null },
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        role: true,
+        image: true,
+        bio: true,
+        review: true,
+      },
+    });
+
+    return res.json({ message: "Review enregistrée.", user: updated });
+  } catch (error) {
+    console.error("Update review error:", error);
+    return res.status(500).json({ message: "Erreur interne du serveur" });
+  }
+});
+
 export default router;

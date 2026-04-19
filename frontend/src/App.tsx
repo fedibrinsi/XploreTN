@@ -14,10 +14,13 @@ import ExplorePage from "./pages/ExplorePage";
 import MessagingApp from "./pages/Messaging";
 import Activities from "./pages/ExploreActivities";
 import ActivityPage from "./pages/ActivityPage";
+import NotificationPage from "./pages/Notifications";
+import ScrollToTop from "./components/ScrollToTop";
 
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<HomePage />} />
@@ -33,6 +36,7 @@ function App() {
           <Route path="/messaging" element={<MessagingApp />} />
           <Route path="/activities" element={<Activities />} />
           <Route path="/activity" element={<ActivityPage />} />
+          <Route path="/notifications" element={<NotificationPage />} />
         </Route>
         <Route path="auth" element={<AuthPage />} />
       </Routes>

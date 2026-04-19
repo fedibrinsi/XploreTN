@@ -2,6 +2,7 @@ import express from "express";
 import { Request, Response } from "express";
 import prisma from "../prisma";
 import { authenticateJWT, AuthRequest } from "../middleware/auth";
+import { createHousingNotification } from "./notifications";
 
 const router = express.Router();
 
@@ -65,6 +66,13 @@ router.post("/", authenticateJWT, async (req: Request, res: Response) => {
           select: { title: true, location: true, type: true },
         },
       },
+    });
+
+    await createHousingNotification({
+      userId: housing.ownerId,
+      housingId,
+      reservationId: reservation.id,
+      type: "RESERVATION_REQUESTED",
     });
 
     return res.status(201).json({
@@ -185,6 +193,16 @@ router.patch(
         data: { status },
       });
 
+      await createHousingNotification({
+        userId: reservation.touristId,
+        housingId: reservation.housingId,
+        reservationId: reservation.id,
+        type:
+          status === "ACCEPTED"
+            ? "RESERVATION_ACCEPTED"
+            : "RESERVATION_REJECTED",
+      });
+
       return res.json({
         message:
           status === "ACCEPTED"
@@ -222,7 +240,8 @@ router.patch(
       }
       if (reservation.status !== "ACCEPTED") {
         return res.status(400).json({
-          message: "Seules les réservations acceptées peuvent être marquées comme terminées.",
+          message:
+            "Seules les réservations acceptées peuvent être marquées comme terminées.",
         });
       }
 
@@ -236,8 +255,16 @@ router.patch(
         },
       });
 
+      await createHousingNotification({
+        userId: reservation.touristId,
+        housingId: reservation.housingId,
+        reservationId: reservation.id,
+        type: "RESERVATION_COMPLETED",
+      });
+
       return res.json({
-        message: "Séjour marqué comme terminé. Le logement est de nouveau disponible.",
+        message:
+          "Séjour marqué comme terminé. Le logement est de nouveau disponible.",
         reservation: updated,
       });
     } catch (error) {
@@ -259,6 +286,7 @@ router.patch(
 
       const reservation = await prisma.reservation.findUnique({
         where: { id: reservationId },
+        include: { housing: true },
       });
 
       if (!reservation) {
@@ -276,6 +304,13 @@ router.patch(
       const updated = await prisma.reservation.update({
         where: { id: reservationId },
         data: { status: "CANCELLED" },
+      });
+
+      await createHousingNotification({
+        userId: reservation.housing.ownerId, // inclure housing dans le findUnique
+        housingId: reservation.housingId,
+        reservationId: reservation.id,
+        type: "RESERVATION_CANCELLED",
       });
 
       return res.json({
