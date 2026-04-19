@@ -5,6 +5,8 @@ import {
   CATEGORY_CONFIG,
   type Activity,
   type ActivityCategory,
+  type ActivityFilters,
+  type ActivitySortBy,
 } from "../services/activityService";
 import { useDebouncedPrice } from "../hooks/useDebouncedPrice";
 import { PriceRangeSlider } from "../components/PriceRangeSlider";
@@ -29,7 +31,11 @@ export default function ExploreActivities() {
     (price) => setMaxPrice(price),
     300, // Debounce delay in ms
   );
-  const [sortBy, setSortBy] = useState("newest");
+  const [sortBy, setSortBy] = useState<ActivitySortBy>("newest");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
+  const totalPages = Math.ceil(total / pageSize);
 
   // ─── Fetch activities whenever filters change ───────────────────────────
   useEffect(() => {
@@ -37,7 +43,12 @@ export default function ExploreActivities() {
       setLoading(true);
       setError("");
       try {
-        const filters: any = { status: "APPROVED" };
+        const filters: ActivityFilters = {
+          status: "APPROVED",
+          page: currentPage,
+          pageSize,
+          sortBy,
+        };
         if (selectedCategory) filters.category = selectedCategory;
         if (maxPrice < 500) filters.maxPrice = maxPrice;
 
@@ -55,18 +66,21 @@ export default function ExploreActivities() {
 
         setActivities(sorted);
         setTotal(result.total);
-      } catch (err: any) {
-        setError(err?.response?.data?.message || "Failed to load activities");
+      } catch (err: unknown) {
+        setError(
+          err instanceof Error ? err.message : "Failed to load activities",
+        );
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, [selectedCategory, maxPrice, sortBy]);
+  }, [selectedCategory, maxPrice, sortBy, currentPage]);
 
   // ─── Category select handler ────────────────────────────────────────────
   const handleCategorySelect = (cat: ActivityCategory | "") => {
     setSelectedCategory(cat);
+    setCurrentPage(1);
     if (cat) {
       setSearchParams({ category: cat });
     } else {
@@ -145,6 +159,7 @@ export default function ExploreActivities() {
                   handleCategorySelect("");
                   setMaxPrice(500);
                   setLocalPrice(500);
+                  setCurrentPage(1);
                 }}
                 className="w-full py-4 rounded-full bg-linear-to-br from-[#003873] to-[#1D4F91] text-white font-bold text-sm shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all mb-4"
               >
@@ -171,7 +186,10 @@ export default function ExploreActivities() {
             <select
               className="bg-transparent border-none focus:ring-0 font-bold text-primary cursor-pointer"
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
+              onChange={(e) => {
+                setSortBy(e.target.value as ActivitySortBy);
+                setCurrentPage(1);
+              }}
             >
               <option value="newest">Newest First</option>
               <option value="price_desc">Price: High to Low</option>
@@ -222,6 +240,7 @@ export default function ExploreActivities() {
               onClick={() => {
                 handleCategorySelect("");
                 setMaxPrice(500);
+                setCurrentPage(1);
               }}
               className="mt-4 px-6 py-3 rounded-full bg-primary text-white font-bold"
             >
@@ -233,20 +252,38 @@ export default function ExploreActivities() {
         {/* Activities Grid */}
         {!loading && !error && activities.length > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {activities.map((activity, index) => {
-              const isLarge = index === 2; // Third card spans full width
-              return (
-                <div
-                  key={activity.id}
-                  className={isLarge ? "lg:col-span-2" : ""}
-                >
-                  <ActivityCard
-                    activity={activity}
-                    variant={isLarge ? "large" : "default"}
-                  />
-                </div>
-              );
-            })}
+            {activities.map((activity) => (
+              <ActivityCard key={activity.id} activity={activity} />
+            ))}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-12">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="px-4 py-2 rounded-full bg-primary text-white disabled:bg-gray-300 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`px-4 py-2 rounded-full ${page === currentPage ? "bg-primary text-white" : "bg-gray-200 text-gray-700"}`}
+              >
+                {page}
+              </button>
+            ))}
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 rounded-full bg-primary text-white disabled:bg-gray-300 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
           </div>
         )}
       </section>

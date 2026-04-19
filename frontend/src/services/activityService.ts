@@ -39,6 +39,8 @@ export interface Activity {
   };
 }
 
+export type ActivitySortBy = "newest" | "price_asc" | "price_desc";
+
 export interface ActivityFilters {
   category?: ActivityCategory;
   status?: ActivityStatus;
@@ -47,6 +49,7 @@ export interface ActivityFilters {
   search?: string;
   page?: number;
   pageSize?: number;
+  sortBy?: ActivitySortBy;
 }
 
 export interface CreateActivityData {
@@ -85,11 +88,14 @@ export async function fetchActivities(filters: ActivityFilters = {}) {
   const params = new URLSearchParams();
   if (filters.category) params.set("category", filters.category);
   if (filters.status) params.set("status", filters.status);
-  if (filters.minPrice !== undefined) params.set("minPrice", String(filters.minPrice));
-  if (filters.maxPrice !== undefined) params.set("maxPrice", String(filters.maxPrice));
+  if (filters.minPrice !== undefined)
+    params.set("minPrice", String(filters.minPrice));
+  if (filters.maxPrice !== undefined)
+    params.set("maxPrice", String(filters.maxPrice));
   if (filters.search) params.set("search", filters.search);
   if (filters.page) params.set("page", String(filters.page));
   if (filters.pageSize) params.set("pageSize", String(filters.pageSize));
+  if (filters.sortBy) params.set("sortBy", filters.sortBy);
 
   const res = await api.get(`/activities?${params.toString()}`);
   return res.data as {
@@ -115,7 +121,10 @@ export async function createActivity(data: CreateActivityData) {
   return res.data;
 }
 
-export async function updateActivity(id: number, data: Partial<CreateActivityData>) {
+export async function updateActivity(
+  id: number,
+  data: Partial<CreateActivityData>,
+) {
   const res = await api.put(`/activities/${id}`, data);
   return res.data;
 }

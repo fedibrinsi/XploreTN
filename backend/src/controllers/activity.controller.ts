@@ -185,8 +185,16 @@ export async function create(
  */
 export async function list(req: Request, res: Response): Promise<void> {
   try {
-    const { category, status, minPrice, maxPrice, search, page, pageSize } =
-      req.query;
+    const {
+      category,
+      status,
+      minPrice,
+      maxPrice,
+      search,
+      page,
+      pageSize,
+      sortBy,
+    } = req.query;
 
     const result = await activityService.getActivities({
       category: category as ActivityCategory | undefined,
@@ -196,6 +204,7 @@ export async function list(req: Request, res: Response): Promise<void> {
       search: search as string | undefined,
       page: page ? Number(page) : 1,
       pageSize: pageSize ? Number(pageSize) : 12,
+      sortBy: sortBy as "newest" | "price_asc" | "price_desc" | undefined,
     });
 
     res.json(result);

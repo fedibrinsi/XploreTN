@@ -1,8 +1,17 @@
 import prisma from "../prisma.js";
-import type { ActivityCategory, ActivityStatus } from "../../generated/prisma/client.js";
-import type { CreateActivityInput, UpdateActivityInput } from "../validators/activity.validator.js";
+import type {
+  Prisma,
+  ActivityCategory,
+  ActivityStatus,
+} from "../../generated/prisma/client.js";
+import type {
+  CreateActivityInput,
+  UpdateActivityInput,
+} from "../validators/activity.validator.js";
 
 // ─── Filters interface ──────────────────────────────────────────────────────
+type ActivitySortBy = "newest" | "price_asc" | "price_desc";
+
 interface ActivityFilters {
   category?: ActivityCategory;
   status?: ActivityStatus;
@@ -11,10 +20,14 @@ interface ActivityFilters {
   search?: string;
   page?: number;
   pageSize?: number;
+  sortBy?: ActivitySortBy;
 }
 
 // ─── Create a new activity ──────────────────────────────────────────────────
-export async function createActivity(data: CreateActivityInput, creatorId: number) {
+export async function createActivity(
+  data: CreateActivityInput,
+  creatorId: number,
+) {
   const activity = await prisma.activity.create({
     data: {
       title: data.title,
@@ -50,6 +63,7 @@ export async function getActivities(filters: ActivityFilters = {}) {
     search,
     page = 1,
     pageSize = 12,
+    sortBy = "newest",
   } = filters;
 
   const where: any = {};
@@ -69,6 +83,14 @@ export async function getActivities(filters: ActivityFilters = {}) {
     ];
   }
 
+  const orderBy = (
+    sortBy === "price_asc"
+      ? [{ price: "asc" }, { createdAt: "desc" }]
+      : sortBy === "price_desc"
+        ? [{ price: "desc" }, { createdAt: "desc" }]
+        : [{ createdAt: "desc" }, { id: "desc" }]
+  ) as Prisma.ActivityOrderByWithRelationInput[];
+
   const [activities, total] = await Promise.all([
     prisma.activity.findMany({
       where,
@@ -77,7 +99,7 @@ export async function getActivities(filters: ActivityFilters = {}) {
           select: { id: true, fullName: true, image: true },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy,
       skip: (page - 1) * pageSize,
       take: pageSize,
     }),
@@ -117,7 +139,11 @@ export async function getMyActivities(userId: number) {
 }
 
 // ─── Update an activity (with ownership check) ─────────────────────────────
-export async function updateActivity(id: number, data: UpdateActivityInput, userId: number) {
+export async function updateActivity(
+  id: number,
+  data: UpdateActivityInput,
+  userId: number,
+) {
   // Check existence and ownership
   const existing = await prisma.activity.findUnique({ where: { id } });
   if (!existing) return { error: "NOT_FOUND" as const };
