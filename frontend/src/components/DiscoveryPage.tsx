@@ -145,7 +145,6 @@ const Section: FC<{ title: string; children: ReactNode }> = ({
 
 const DiscoveryPage: FC<DiscoveryPageProps> = ({
   isLoggedIn = false,
-  isTourist = false,
 }) => {
   const [query, setQuery] = useState<string>("");
   const [entity, setEntity] = useState<EntityType>("activity");
@@ -270,8 +269,8 @@ const DiscoveryPage: FC<DiscoveryPageProps> = ({
         </Section>
       )}
 
-      {/* ── Social matching (tourist role only) ──────────────────────────── */}
-      {isLoggedIn && isTourist && !hasActiveQuery && (
+      {/* ── Social matching ──────────────────────────── */}
+      {isLoggedIn && !hasActiveQuery && (
         <Section title="Meet a Local Guide">
           {matchLoading && <Spinner />}
           {matchError && <ErrorMessage message={matchError} />}

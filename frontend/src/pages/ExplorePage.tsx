@@ -1,5 +1,9 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import messageImg from "../assets/explore.jpg";
+import { useSearch, useRecommendations, useMatchLocals } from "../hooks/useAI";
+import ActivityCard from "../components/ActivityCard";
+import MatchedLocalCard from "../components/MatchedLocalCard";
+import type { EntityType } from "../types/ai.types";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -1054,9 +1058,45 @@ export default function ExplorePage() {
   const [sortBy, setSortBy] = useState<SortOption>("distance");
   const [gpsLoading, setGpsLoading] = useState(false);
 
+  // ─── AI Features State ──────────────────────────────────────────────────────
+  const [aiQuery, setAiQuery] = useState<string>("");
+  const [aiEntity, setAiEntity] = useState<EntityType>("activity");
+  const [usePersonalised, setUsePersonalised] = useState<boolean>(false);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+
+  // ─── AI Hooks ───────────────────────────────────────────────────────────────
+  const {
+    results: searchResults,
+    loading: searchLoading,
+    error: searchError,
+  } = useSearch(aiQuery, {
+    entity: aiEntity,
+    personalised: usePersonalised && isLoggedIn,
+    top_k: 6,
+    debounceMs: 400,
+  });
+
+  const {
+    results: recommendations,
+    loading: recLoading,
+    error: recError,
+  } = useRecommendations(aiEntity, 6);
+
+  const {
+    matches,
+    loading: matchLoading,
+    error: matchError,
+  } = useMatchLocals(3);
+
+  // Check if user is logged in (from localStorage)
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsLoggedIn(!!token);
+  }, []);
+
   const doSearch = useCallback(async (f: ExploreFilters) => {
     if (!f.location.trim() || !f.categories.length) return;
-    let resolved = { ...f };
+    const resolved = { ...f };
     if (resolved.latitude == null || resolved.longitude == null) {
       const geo = await geocodeQuery(f.location);
       if (geo) {
@@ -1293,9 +1333,283 @@ export default function ExplorePage() {
         )}
       </div>
 
-      {selected && (
-        <PlaceDetailModal place={selected} onClose={() => setSelected(null)} />
-      )}
+      {/* ── AI Section: Search, Recommendations & Social Matching ── */}
+      <div className="pt-8 pb-32 min-h-screen px-4 md:px-8 max-w-7xl mx-auto">
+        {/* ── AI Search Panel ── */}
+        <section className="mb-20">
+          <div className="mb-8">
+            <h2 className="font-headline text-4xl font-bold text-primary mb-2">
+              Discover with AI
+            </h2>
+            <p className="text-on-surface-variant text-lg">
+              Explore personalized activities, places, and connect with local
+              guides
+            </p>
+          </div>
+
+          <div className="bg-surface-container-lowest rounded-[2rem] border border-surface-variant/20 shadow-lg shadow-primary/5 p-6 sm:p-8 space-y-6">
+            {/* Search Input */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+                Search for experiences & places
+              </label>
+              <input
+                type="search"
+                className="w-full px-6 py-4 rounded-2xl border border-surface-variant/40 bg-surface-container-low text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                placeholder="Try: outdoor adventure, traditional craft workshop, local café…"
+                value={aiQuery}
+                onChange={(e) => setAiQuery(e.target.value)}
+              />
+            </div>
+
+            {/* Entity Type Select & Personalization Toggle */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 space-y-2">
+                <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+                  Search Type
+                </label>
+                <select
+                  className="w-full px-4 py-3 rounded-xl border border-surface-variant/40 bg-surface-container-low text-on-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                  value={aiEntity}
+                  onChange={(e) => setAiEntity(e.target.value as EntityType)}
+                >
+                  <option value="activity">Activities</option>
+                  <option value="place">Places</option>
+                </select>
+              </div>
+
+              {isLoggedIn && (
+                <div className="flex-1 space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+                    Preferences
+                  </label>
+                  <label className="flex items-center gap-3 px-4 py-3 rounded-xl border border-surface-variant/40 bg-surface-container-low cursor-pointer hover:border-primary/50 transition-all">
+                    <input
+                      type="checkbox"
+                      checked={usePersonalised}
+                      onChange={(e) => setUsePersonalised(e.target.checked)}
+                      className="w-4 h-4 rounded cursor-pointer"
+                    />
+                    <span className="text-sm font-medium">
+                      Use my profile (personalized results)
+                    </span>
+                  </label>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Search Results */}
+          {aiQuery.trim().length >= 2 && (
+            <div className="mt-8">
+              {searchLoading && (
+                <div className="text-center py-12">
+                  <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                  <p className="text-on-surface-variant font-medium">
+                    Searching…
+                  </p>
+                </div>
+              )}
+
+              {searchError && (
+                <div className="text-center py-12">
+                  <span className="material-symbols-outlined text-6xl text-error/40 block mb-4">
+                    error
+                  </span>
+                  <p className="text-error font-medium">{searchError}</p>
+                </div>
+              )}
+
+              {!searchLoading && searchResults.length === 0 && (
+                <div className="text-center py-12">
+                  <span className="material-symbols-outlined text-6xl text-on-surface-variant/40 block mb-4">
+                    search_off
+                  </span>
+                  <p className="text-on-surface-variant font-medium">
+                    No results found. Try a different search.
+                  </p>
+                </div>
+              )}
+
+              {searchResults.length > 0 && (
+                <div>
+                  <h3 className="font-headline text-xl font-bold text-on-surface mb-6">
+                    Search Results ({searchResults.length})
+                  </h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {searchResults.map((item) => (
+                      <ActivityCard
+                        key={item.id}
+                        activity={{
+                          id: item.id as number,
+                          title: (item.data as any)?.title || "Activity",
+                          description:
+                            (item.data as any)?.description || "No description",
+                          price: (item.data as any)?.price || 0,
+                          date:
+                            (item.data as any)?.date ||
+                            new Date().toISOString(),
+                          location: (item.data as any)?.location || "Tunisia",
+                          latitude: (item.data as any)?.latitude || 35.8,
+                          longitude: (item.data as any)?.longitude || 10.1957,
+                          images: (item.data as any)?.images || [],
+                          capacity: (item.data as any)?.capacity || 1,
+                          category: (item.data as any)?.category || "OTHER",
+                          status: "APPROVED",
+                          createdAt: new Date().toISOString(),
+                          updatedAt: new Date().toISOString(),
+                          creatorId: 0,
+                          creator: {
+                            id: 0,
+                            fullName: "Creator",
+                            image: "",
+                          },
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+
+        {/* ── Recommendations Section (Logged-in only, when not searching) ── */}
+        {isLoggedIn && aiQuery.trim().length < 2 && (
+          <section className="mb-20">
+            <div className="mb-8">
+              <h2 className="font-headline text-3xl font-bold text-on-surface">
+                Recommendations for You
+              </h2>
+              <p className="text-on-surface-variant text-sm mt-1">
+                Based on your interests and profile
+              </p>
+            </div>
+
+            {recLoading && (
+              <div className="text-center py-12">
+                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                <p className="text-on-surface-variant font-medium">
+                  Loading recommendations…
+                </p>
+              </div>
+            )}
+
+            {recError && (
+              <div className="text-center py-12">
+                <span className="material-symbols-outlined text-6xl text-error/40 block mb-4">
+                  error
+                </span>
+                <p className="text-error font-medium">{recError}</p>
+              </div>
+            )}
+
+            {!recLoading && recommendations.length === 0 && (
+              <div className="text-center py-12">
+                <span className="material-symbols-outlined text-6xl text-on-surface-variant/40 block mb-4">
+                  lightbulb
+                </span>
+                <p className="text-on-surface-variant font-medium">
+                  Update your interests to get personalized recommendations
+                </p>
+              </div>
+            )}
+
+            {recommendations.length > 0 && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {recommendations.map((item) => (
+                  <ActivityCard
+                    key={item.id}
+                    activity={{
+                      id: item.id as number,
+                      title: (item.data as any)?.title || "Activity",
+                      description:
+                        (item.data as any)?.description || "No description",
+                      price: (item.data as any)?.price || 0,
+                      date:
+                        (item.data as any)?.date || new Date().toISOString(),
+                      location: (item.data as any)?.location || "Tunisia",
+                      latitude: (item.data as any)?.latitude || 35.8,
+                      longitude: (item.data as any)?.longitude || 10.1957,
+                      images: (item.data as any)?.images || [],
+                      capacity: (item.data as any)?.capacity || 1,
+                      category: (item.data as any)?.category || "OTHER",
+                      status: "APPROVED",
+                      createdAt: new Date().toISOString(),
+                      updatedAt: new Date().toISOString(),
+                      creatorId: 0,
+                      creator: {
+                        id: 0,
+                        fullName: "Creator",
+                        image: "",
+                      },
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* ── Social Matching Section (Tourists only) ── */}
+        {isLoggedIn && aiQuery.trim().length < 2 && (
+          <section className="mb-20">
+            <div className="mb-8">
+              <h2 className="font-headline text-3xl font-bold text-on-surface">
+                Meet Local Guides
+              </h2>
+              <p className="text-on-surface-variant text-sm mt-1">
+                Connect with locals who share your interests
+              </p>
+            </div>
+
+            {matchLoading && (
+              <div className="text-center py-12">
+                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                <p className="text-on-surface-variant font-medium">
+                  Finding matches…
+                </p>
+              </div>
+            )}
+
+            {matchError && (
+              <div className="text-center py-12">
+                <span className="material-symbols-outlined text-6xl text-error/40 block mb-4">
+                  error
+                </span>
+                <p className="text-error font-medium">{matchError}</p>
+              </div>
+            )}
+
+            {!matchLoading && matches.length === 0 && (
+              <div className="text-center py-12">
+                <span className="material-symbols-outlined text-6xl text-on-surface-variant/40 block mb-4">
+                  people
+                </span>
+                <p className="text-on-surface-variant font-medium">
+                  No local guides found. Check back soon!
+                </p>
+              </div>
+            )}
+
+            {matches.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {matches.map((match) => (
+                  <MatchedLocalCard
+                    key={match.id}
+                    match={match as any}
+                    localId={
+                      typeof match.id === "number"
+                        ? match.id
+                        : parseInt(String(match.id), 10)
+                    }
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+      </div>
     </>
   );
 }

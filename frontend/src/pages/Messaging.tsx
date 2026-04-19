@@ -194,112 +194,117 @@ function NewDMModal({
 
   return (
     <>
-    <Header />
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: "rgba(20,15,5,0.6)", backdropFilter: "blur(6px)" }}
-      onClick={onClose}
-    >
+      <Header />
       <div
-        className="relative w-full max-w-sm mx-4 rounded-2xl shadow-2xl overflow-hidden"
-        style={{ background: "var(--color-background-primary, #fff)" }}
-        onClick={(e) => e.stopPropagation()}
+        className="fixed inset-0 z-50 flex items-center justify-center"
+        style={{ background: "rgba(20,15,5,0.6)", backdropFilter: "blur(6px)" }}
+        onClick={onClose}
       >
-        {/* Header */}
-        <div className="px-6 pt-6 pb-4 border-b border-outline-variant/20">
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 p-1 rounded-full hover:bg-surface-container-high transition-colors"
-          >
-            <span className="material-symbols-outlined text-outline text-xl">
-              close
-            </span>
-          </button>
-          <h2 className="font-headline text-2xl italic text-primary mb-0.5">
-            New Message
-          </h2>
-          <p className="text-[11px] text-outline uppercase tracking-widest">
-            Search by name
-          </p>
-        </div>
+        <div
+          className="relative w-full max-w-sm mx-4 rounded-2xl shadow-2xl overflow-hidden"
+          style={{ background: "var(--color-background-primary, #fff)" }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="px-6 pt-6 pb-4 border-b border-outline-variant/20">
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 p-1 rounded-full hover:bg-surface-container-high transition-colors"
+            >
+              <span className="material-symbols-outlined text-outline text-xl">
+                close
+              </span>
+            </button>
+            <h2 className="font-headline text-2xl italic text-primary mb-0.5">
+              New Message
+            </h2>
+            <p className="text-[11px] text-outline uppercase tracking-widest">
+              Search by name
+            </p>
+          </div>
 
-        {/* Search input */}
-        <div className="px-4 py-3 border-b border-outline-variant/10">
-          <div className="relative group">
-            <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-lg group-focus-within:text-primary transition-colors">
-              search
-            </span>
-            <input
-              autoFocus
-              value={query}
-              onChange={(e) => handleSearch(e.target.value)}
-              placeholder="Search by name..."
-              className="w-full bg-surface-container-low rounded-xl pl-10 pr-4 py-3 text-sm border-none focus:ring-2 focus:ring-primary/20 focus:outline-none placeholder:text-outline-variant" />
-            {loading && (
-              <div className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 border-outline-variant border-t-primary animate-spin" />
+          {/* Search input */}
+          <div className="px-4 py-3 border-b border-outline-variant/10">
+            <div className="relative group">
+              <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-lg group-focus-within:text-primary transition-colors">
+                search
+              </span>
+              <input
+                autoFocus
+                value={query}
+                onChange={(e) => handleSearch(e.target.value)}
+                placeholder="Search by name..."
+                className="w-full bg-surface-container-low rounded-xl pl-10 pr-4 py-3 text-sm border-none focus:ring-2 focus:ring-primary/20 focus:outline-none placeholder:text-outline-variant"
+              />
+              {loading && (
+                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 border-outline-variant border-t-primary animate-spin" />
+              )}
+            </div>
+          </div>
+
+          {/* Results */}
+          <div className="overflow-y-auto max-h-72 custom-scrollbar">
+            {results.length === 0 && query.length >= 2 && !loading ? (
+              <div className="flex flex-col items-center justify-center py-10 gap-2">
+                <span className="material-symbols-outlined text-3xl text-outline-variant">
+                  person_search
+                </span>
+                <p className="text-sm text-outline">
+                  No users found for "{query}"
+                </p>
+              </div>
+            ) : results.length === 0 && query.length < 2 ? (
+              <div className="flex flex-col items-center justify-center py-10 gap-2">
+                <span className="material-symbols-outlined text-3xl text-outline-variant">
+                  group
+                </span>
+                <p className="text-sm text-outline">
+                  Type at least 2 characters
+                </p>
+              </div>
+            ) : (
+              <div className="p-2">
+                {results.map((user) => (
+                  <button
+                    key={user.id}
+                    onClick={() => onStart(user.id)}
+                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-surface-container-high transition-colors text-left group"
+                  >
+                    <div className="relative w-11 h-11 flex-shrink-0">
+                      {user.image ? (
+                        <img
+                          src={toImageUrl(user.image)}
+                          alt={user.fullName}
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      ) : (
+                        <div
+                          className="w-full h-full rounded-full flex items-center justify-center text-white text-sm font-bold"
+                          style={{
+                            background: avatarColor(getInitials(user.fullName)),
+                          }}
+                        >
+                          {getInitials(user.fullName)}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm text-on-surface truncate">
+                        {user.fullName}
+                      </p>
+                      <p className="text-xs text-outline">Tap to message</p>
+                    </div>
+                    <span className="material-symbols-outlined text-outline text-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                      chevron_right
+                    </span>
+                  </button>
+                ))}
+              </div>
             )}
           </div>
         </div>
-
-        {/* Results */}
-        <div className="overflow-y-auto max-h-72 custom-scrollbar">
-          {results.length === 0 && query.length >= 2 && !loading ? (
-            <div className="flex flex-col items-center justify-center py-10 gap-2">
-              <span className="material-symbols-outlined text-3xl text-outline-variant">
-                person_search
-              </span>
-              <p className="text-sm text-outline">
-                No users found for "{query}"
-              </p>
-            </div>
-          ) : results.length === 0 && query.length < 2 ? (
-            <div className="flex flex-col items-center justify-center py-10 gap-2">
-              <span className="material-symbols-outlined text-3xl text-outline-variant">
-                group
-              </span>
-              <p className="text-sm text-outline">Type at least 2 characters</p>
-            </div>
-          ) : (
-            <div className="p-2">
-              {results.map((user) => (
-                <button
-                  key={user.id}
-                  onClick={() => onStart(user.id)}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-surface-container-high transition-colors text-left group"
-                >
-                  <div className="relative w-11 h-11 flex-shrink-0">
-                    {user.image ? (
-                      <img
-                        src={toImageUrl(user.image)}
-                        alt={user.fullName}
-                        className="w-full h-full rounded-full object-cover" />
-                    ) : (
-                      <div
-                        className="w-full h-full rounded-full flex items-center justify-center text-white text-sm font-bold"
-                        style={{
-                          background: avatarColor(getInitials(user.fullName)),
-                        }}
-                      >
-                        {getInitials(user.fullName)}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm text-on-surface truncate">
-                      {user.fullName}
-                    </p>
-                    <p className="text-xs text-outline">Tap to message</p>
-                  </div>
-                  <span className="material-symbols-outlined text-outline text-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                    chevron_right
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
-    </div></>
+    </>
   );
 }
 
@@ -335,6 +340,7 @@ export default function MessagingPage() {
   const location = useLocation();
   const navState = location.state as {
     targetConvId?: string;
+    targetUserId?: number;
     autoMessage?: string;
   } | null;
 
@@ -416,6 +422,28 @@ export default function MessagingPage() {
       }
     });
   }, [conversations, loadingConvs, navState, connected]);
+
+  // ── Auto-start DM from targetUserId (e.g., from matched local card) ────
+  useEffect(() => {
+    if (!navState?.targetUserId) return;
+    if (loadingConvs) return;
+    if (autoMessageSentRef.current) return;
+
+    // Check if a conversation already exists with this user
+    const existingConv = conversations.find((c) =>
+      c.participants.some((p) => p.userId === navState.targetUserId),
+    );
+
+    if (existingConv) {
+      handleSelectConv(existingConv);
+      autoMessageSentRef.current = true;
+    } else {
+      // Create a new DM
+      handleStartDM(navState.targetUserId).then(() => {
+        autoMessageSentRef.current = true;
+      });
+    }
+  }, [conversations, loadingConvs, navState?.targetUserId]);
 
   // ── Socket: new messages ───────────────────────────────────────────────
   useEffect(() => {
