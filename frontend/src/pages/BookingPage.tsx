@@ -167,15 +167,6 @@ export default function BookingPage() {
                   </div>
                 </div>
               </div>
-
-              {/* Special Requests Section */}
-              <div className="bg-surface-container-lowest p-8 lg:p-10 shadow-xl shadow-primary/5 border border-surface-variant/30 rounded-xl">
-                <h3 className="font-headline text-2xl text-primary mb-6">Additional Notes</h3>
-                <div className="space-y-2">
-                  <label className="font-label text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold">Special Requests or Dietary Requirements</label>
-                  <textarea className="w-full bg-surface-container-low border border-surface-variant/50 focus:border-primary focus:ring-1 focus:ring-primary rounded-lg transition-all py-4 px-4 text-on-surface placeholder:text-outline-variant italic resize-none" placeholder="e.g. Vegetarian, early pickup..." rows={3}></textarea>
-                </div>
-              </div>
             </div>
 
             {/* Right Column: Price Breakdown & CTA */}

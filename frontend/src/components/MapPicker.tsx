@@ -14,7 +14,7 @@ L.Icon.Default.mergeOptions({
 });
 
 // Component to handle programmatic map movements
-function ChangeView({ center, zoom }: { center: [number, number], zoom: number }) {
+function ChangeView({ center }: { center: [number, number] }) {
   const map = useMap();
   useEffect(() => {
     map.setView(center, map.getZoom()); // Preserve zoom level if already set
@@ -122,7 +122,7 @@ export default function MapPicker({
           scrollWheelZoom={false}
           style={{ height: "100%", width: "100%" }}
         >
-          <ChangeView center={[latitude, longitude]} zoom={zoom} />
+          <ChangeView center={[latitude, longitude]} />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
