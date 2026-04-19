@@ -23,7 +23,6 @@ model User {
   embeddingText String                      @default("")
   embedding     Unsupported("vector(768)")?
 
-  bookings                 Booking[]
   activities               Activity[]
   conversationParticipants ConversationParticipant[]
   housings                 Housing[]
@@ -51,7 +50,6 @@ model Activity {
   tags          String[]
   embeddingText String                      @default("")
   embedding     Unsupported("vector(768)")?
-  bookings      Booking[]
 
   @@unique([title, creatorId])
   @@index([location])
@@ -141,19 +139,6 @@ model Message {
   sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
 }
 
-model Booking {
-  id         Int           @id @default(autoincrement())
-  userId     Int
-  activityId Int
-  status     BookingStatus @default(PENDING)
-  createdAt  DateTime      @default(now())
-  user       User          @relation(fields: [userId], references: [id])
-  activity   Activity      @relation(fields: [activityId], references: [id])
-
-  @@index([userId])
-  @@index([activityId])
-}
-
 enum Role {
   CITOYEN
   TOURISTE
@@ -198,10 +183,4 @@ enum PlaceCategory {
   PHARMACY
   BAKERY
   MARKET
-}
-
-enum BookingStatus {
-  PENDING
-  CONFIRMED
-  CANCELLED
 }
