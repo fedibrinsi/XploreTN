@@ -277,49 +277,6 @@ export default function ExperienceDetails() {
                 </span>
               </div>
               <div className="space-y-6 mt-16 text-left">
-                <h3 className="font-headline text-lg font-bold">
-                  Reserve For...
-                </h3>
-                <div className="space-y-2 text-left">
-                  <label className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
-                    Guests
-                  </label>
-                  <div className="flex items-center justify-between bg-surface-container-low rounded-2xl p-3">
-                    <div className="flex items-center gap-3 ml-1 text-primary">
-                      <span className="material-symbols-outlined">group</span>
-                      <span className="font-medium text-on-surface">
-                        {guests} Explorer{guests !== 1 ? "s" : ""}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 border border-outline/20 rounded-full px-2 py-1 bg-surface">
-                      <button
-                        type="button"
-                        onClick={() => setGuests(Math.max(1, guests - 1))}
-                        className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors text-primary shadow-sm disabled:opacity-50"
-                        disabled={guests <= 1}
-                      >
-                        <span className="material-symbols-outlined text-[1rem]">
-                          remove
-                        </span>
-                      </button>
-                      <span className="font-bold w-4 text-center">
-                        {guests}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setGuests(Math.min(activity.capacity, guests + 1))
-                        }
-                        className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors text-primary shadow-sm disabled:opacity-50"
-                        disabled={guests >= activity.capacity}
-                      >
-                        <span className="material-symbols-outlined text-[1rem]">
-                          add
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
                 {isOwner ? (
                   <div className="mt-4 w-full py-5 rounded-full bg-surface-container-high text-on-surface-variant font-bold text-lg flex justify-center items-center gap-2 cursor-not-allowed">
                     <span className="material-symbols-outlined">lock</span>
