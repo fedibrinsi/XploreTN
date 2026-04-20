@@ -8,8 +8,8 @@ import * as activityService from "../services/activity.service.js";
 import type {
   ActivityCategory,
   ActivityStatus,
-} from ".prisma/client";
-import { Prisma } from ".prisma/client";
+} from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 /**
  * ════════════════════════════════════════════════════════════════════════════
