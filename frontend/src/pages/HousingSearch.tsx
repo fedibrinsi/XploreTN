@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { LocationAutocomplete } from "./LocationAutocomplete";
 import { createDM } from "../types/messages";
+import { API_BASE, BACKEND_URL } from "../utils/backend";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -88,7 +89,7 @@ interface ToastItem {
 // ─── Axios instance ───────────────────────────────────────────────────────────
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:5000/api",
+  baseURL: API_BASE,
 });
 
 api.interceptors.request.use((config) => {
@@ -138,10 +139,9 @@ const housingSearchApi = {
     if (filters.sortBy) params.sortBy = filters.sortBy;
     if (userId) params.excludeReservedBy = String(userId);
 
-    const { data } = await api.get<Housing[]>(
-      "http://localhost:5000/api/housingSearch/search",
-      { params },
-    );
+    const { data } = await api.get<Housing[]>("/housingSearch/search", {
+      params,
+    });
     return data;
   },
 };
@@ -150,7 +150,7 @@ const reservationApi = {
   async create(
     housingId: string,
   ): Promise<{ reservation: any; message: string }> {
-    const { data } = await api.post("http://localhost:5000/api/reservations", {
+    const { data } = await api.post("/reservations", {
       housingId,
     });
     return data;
@@ -537,11 +537,10 @@ function HousingCard({
   housing: Housing;
   onSelect: (h: Housing) => void;
 }) {
-  const BASE_URL = "http://localhost:5000";
   const resolveImage = (src: string) =>
     src.startsWith("http") || src.startsWith("data:")
       ? src
-      : `${BASE_URL}${src}`;
+      : `${BACKEND_URL}${src}`;
 
   return (
     <article
@@ -644,9 +643,8 @@ function HousingDetailModal({
   onRequestSuccess: (housingTitle: string) => void;
 }) {
   const navigate = useNavigate();
-  const BASE_URL = "http://localhost:5000";
   const resolveImage = (src: string) =>
-    src.startsWith("http") ? src : `${BASE_URL}${src}`;
+    src.startsWith("http") ? src : `${BACKEND_URL}${src}`;
   const [activeImg, setActiveImg] = useState(0);
   const [requesting, setRequesting] = useState(false);
   const [requestError, setRequestError] = useState<string | null>(null);

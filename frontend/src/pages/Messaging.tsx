@@ -15,6 +15,7 @@ import { searchUsers } from "../types/messages";
 import type { UserResult } from "../types/messages";
 import { toImageUrl } from "../utils/imageUrl";
 import messageImg from "../assets/message2.jpg";
+import { BACKEND_URL } from "../utils/backend";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface LocalUser {
@@ -111,10 +112,7 @@ function avatarColor(initials: string): string {
 }
 
 // ── Avatar ─────────────────────────────────────────────────────────────────
-const BASE_URL =
-  typeof window !== "undefined"
-    ? (import.meta as any).env?.VITE_API_URL || "http://localhost:5000"
-    : "http://localhost:5000";
+const BASE_URL = BACKEND_URL;
 
 function Avatar({
   initials,

@@ -5,6 +5,7 @@ import { useSearch, useRecommendations, useMatchLocals } from "../hooks/useAI";
 import ActivityCard from "../components/ActivityCard";
 import MatchedLocalCard from "../components/MatchedLocalCard";
 import type { EntityType } from "../types/ai.types";
+import { API_BASE } from "../utils/backend";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -213,8 +214,7 @@ function formatSecondary(s: NominatimSuggestion): string {
 
 // ─── API ───────────────────────────────────────────────────────────────────────
 
-const BASE_URL = (import.meta.env.VITE_API_URL ??
-  "http://localhost:5000/api") as string;
+const BASE_URL = API_BASE;
 
 async function searchPlaces(filters: ExploreFilters): Promise<Place[]> {
   const params = new URLSearchParams({

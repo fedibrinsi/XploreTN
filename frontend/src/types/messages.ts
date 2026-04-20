@@ -1,8 +1,9 @@
 import axios from "axios";
+import { BACKEND_URL } from "../utils/backend";
 
 // ── Instance axios ─────────────────────────────────────────────────────────
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000",
+  baseURL: BACKEND_URL,
   headers: { "Content-Type": "application/json" },
 });
 

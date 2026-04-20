@@ -6,6 +6,7 @@ import {
   CATEGORY_CONFIG,
 } from "../services/activityService";
 import { useNavigate } from "react-router-dom";
+import { BACKEND_URL } from "../utils/backend";
 
 export default function BookingPage() {
   const { id } = useParams();
@@ -42,7 +43,7 @@ export default function BookingPage() {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        "http://localhost:5000/api/activity-reservations",
+        `${BACKEND_URL}/api/activity-reservations`,
         {
           method: "POST",
           headers: {
@@ -182,7 +183,7 @@ export default function BookingPage() {
                     <img
                       src={
                         activity.creator.image
-                          ? `http://localhost:5000${activity.creator.image}`
+                          ? `${BACKEND_URL}${activity.creator.image}`
                           : `https://ui-avatars.com/api/?name=${encodeURIComponent(activity.creator.fullName)}`
                       }
                       alt={activity.creator.fullName}

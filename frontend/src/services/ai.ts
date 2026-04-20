@@ -31,11 +31,12 @@ import type {
   PersonalisedSearchResponse,
   HealthResponse,
 } from "../types/ai.types";
+import { BACKEND_URL } from "../utils/backend";
 
 // ── Axios instance ─────────────────────────────────────────────────────────
 
 const apiClient: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:5000",
+  baseURL: BACKEND_URL,
   timeout: 20_000,
   headers: { "Content-Type": "application/json" },
 });

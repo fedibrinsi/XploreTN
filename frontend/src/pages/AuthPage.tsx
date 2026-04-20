@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import tunisiaImg from "../assets/tunisia.jpg";
+import { BACKEND_URL } from "../utils/backend";
 
 type Role = "CITOYEN" | "TOURISTE";
 
@@ -22,7 +23,6 @@ export default function AuthPage() {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
   // Login form state
   const [loginData, setLoginData] = useState({ email: "", password: "" });
 

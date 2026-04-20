@@ -10,6 +10,7 @@ import {
 } from "../services/activityService";
 import ImageUploader from "../components/ImageUploader";
 import MapPicker from "../components/MapPicker";
+import { API_BASE, BACKEND_URL } from "../utils/backend";
 
 const allCategories = Object.keys(CATEGORY_CONFIG) as Array<
   keyof typeof CATEGORY_CONFIG
@@ -71,7 +72,7 @@ function getAuthHeaders() {
 }
 
 async function fetchMyHousings(): Promise<HousingWithReservations[]> {
-  const { data } = await axios.get("http://localhost:5000/api/housings/view", {
+  const { data } = await axios.get(`${API_BASE}/housings/view`, {
     headers: getAuthHeaders(),
   });
 
@@ -83,7 +84,7 @@ async function fetchMyHousings(): Promise<HousingWithReservations[]> {
     housings.map(async (h: any) => {
       try {
         const { data: reservations } = await axios.get(
-          `http://localhost:5000/api/reservations/housing/${h.id}`,
+          `${API_BASE}/reservations/housing/${h.id}`,
           { headers: getAuthHeaders() },
         );
 
@@ -117,7 +118,7 @@ async function updateReservationStatus(
   status: "ACCEPTED" | "REJECTED",
 ): Promise<void> {
   await axios.patch(
-    `http://localhost:5000/api/reservations/${reservationId}/status`,
+    `${API_BASE}/reservations/${reservationId}/status`,
     { status },
     { headers: getAuthHeaders() },
   );
@@ -125,7 +126,7 @@ async function updateReservationStatus(
 
 async function completeReservation(reservationId: string): Promise<void> {
   await axios.patch(
-    `http://localhost:5000/api/reservations/${reservationId}/complete`,
+    `${API_BASE}/reservations/${reservationId}/complete`,
     {},
     { headers: getAuthHeaders() },
   );
@@ -133,7 +134,7 @@ async function completeReservation(reservationId: string): Promise<void> {
 
 async function getOrCreateConversation(targetUserId: number): Promise<string> {
   const { data: conv } = await axios.post(
-    "http://localhost:5000/api/messages/conversations",
+    `${API_BASE}/messages/conversations`,
     { targetUserId },
     { headers: getAuthHeaders() },
   );
@@ -158,7 +159,7 @@ async function fetchActiveActivityReservations(): Promise<
   ActivityWithReservations[]
 > {
   const { data } = await axios.get(
-    "http://localhost:5000/api/activity-reservations/active-for-creator",
+    `${API_BASE}/activity-reservations/active-for-creator`,
     { headers: getAuthHeaders() },
   );
 
@@ -176,7 +177,7 @@ async function updateActivityReservationStatus(
   status: "ACCEPTED" | "REJECTED",
 ): Promise<void> {
   await axios.patch(
-    `http://localhost:5000/api/activity-reservations/${reservationId}/status`,
+    `${API_BASE}/activity-reservations/${reservationId}/status`,
     { status },
     { headers: getAuthHeaders() },
   );
@@ -186,7 +187,7 @@ async function completeActivityReservation(
   reservationId: string,
 ): Promise<void> {
   await axios.patch(
-    `http://localhost:5000/api/activity-reservations/${reservationId}/complete`,
+    `${API_BASE}/activity-reservations/${reservationId}/complete`,
     {},
     { headers: getAuthHeaders() },
   );
@@ -781,7 +782,7 @@ export default function CuratorDashboard() {
                                 src={
                                   reservation.tourist.image.startsWith("http")
                                     ? reservation.tourist.image
-                                    : `http://localhost:5000${reservation.tourist.image}`
+                                    : `${BACKEND_URL}${reservation.tourist.image}`
                                 }
                                 alt={reservation.tourist.fullName}
                                 className="w-full h-full object-cover"
@@ -996,7 +997,7 @@ export default function CuratorDashboard() {
                                         "http",
                                       )
                                         ? reservation.tourist.image
-                                        : `http://localhost:5000${reservation.tourist.image}`
+                                        : `${BACKEND_URL}${reservation.tourist.image}`
                                     }
                                     alt={reservation.tourist.fullName}
                                     className="w-full h-full object-cover"

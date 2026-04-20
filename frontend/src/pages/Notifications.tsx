@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
 import { io, Socket } from "socket.io-client";
 import notifBannerImg from "../assets/message2.jpg";
+import { BACKEND_URL } from "../utils/backend";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -223,8 +224,6 @@ const HOUSING_LABELS: Record<string, string> = {
 };
 
 const BACKEND_URL =
-  (import.meta as any).env?.VITE_API_URL || "http://localhost:5000";
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function timeAgo(dateStr: string): string {

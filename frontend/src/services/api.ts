@@ -1,9 +1,9 @@
 import axios from "axios";
+import { API_BASE } from "../utils/backend";
 
 // ─── Centralized Axios instance ─────────────────────────────────────────────
-const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const api = axios.create({
-  baseURL: `${apiBase}/api`,
+  baseURL: API_BASE,
   headers: { "Content-Type": "application/json" },
 });
 

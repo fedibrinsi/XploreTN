@@ -12,6 +12,7 @@ import {
 } from "../services/activityService";
 import ImageUploader from "../components/ImageUploader";
 import MapPicker from "../components/MapPicker";
+import { API_BASE } from "../utils/backend";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -1003,7 +1004,7 @@ export default function ActivityPage() {
         data.map(async (a) => {
           try {
             const res = await fetch(
-              `http://localhost:5000/api/activity-reservations/activity/${a.id}`,
+              `${API_BASE}/activity-reservations/activity/${a.id}`,
               { headers: token ? { Authorization: `Bearer ${token}` } : {} },
             );
             const reservations: any[] = await res.json();
@@ -1115,7 +1116,7 @@ export default function ActivityPage() {
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(
-        `http://localhost:5000/api/activity-reservations/${reservationId}/complete`,
+        `${API_BASE}/activity-reservations/${reservationId}/complete`,
         {
           method: "PATCH",
           headers: {

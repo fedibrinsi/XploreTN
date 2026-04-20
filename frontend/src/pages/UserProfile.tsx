@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toImageUrl } from "../utils/imageUrl";
+import { BACKEND_URL } from "../utils/backend";
 
-const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 interface UserData {
   id: number;

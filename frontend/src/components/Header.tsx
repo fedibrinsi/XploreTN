@@ -2,9 +2,7 @@ import { Link } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 import { toImageUrl } from "../utils/imageUrl";
-
-const BACKEND_URL =
-  (import.meta as any).env?.VITE_API_URL || "http://localhost:5000";
+import { BACKEND_URL } from "../utils/backend";
 
 export default function Header() {
   const [user, setUser] = useState(() => {

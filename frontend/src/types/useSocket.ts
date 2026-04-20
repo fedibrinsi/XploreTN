@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
 import type { Message } from "./messages";
-
-const SERVER_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+import { BACKEND_URL } from "../utils/backend";
 
 export interface TypingUser {
   userId: number;
@@ -47,7 +46,7 @@ export function useSocket(): UseSocketReturn {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    const socket = io(SERVER_URL, {
+    const socket = io(BACKEND_URL, {
       auth: { token },
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,

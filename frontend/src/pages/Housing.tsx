@@ -4,6 +4,7 @@ import { LocationAutocomplete } from "./LocationAutocomplete";
 import messageImg from "../assets/housing1.jpg";
 import MapPicker from "../components/MapPicker";
 import { Link } from "react-router-dom";
+import { API_BASE, BACKEND_URL } from "../utils/backend";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -88,7 +89,7 @@ export const HOUSING_TYPES: HousingType[] = [
 // ─── Axios instance ───────────────────────────────────────────────────────────
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:3000/api",
+  baseURL: API_BASE,
 });
 
 api.interceptors.request.use((config) => {
@@ -237,17 +238,15 @@ function getAuthHeaders() {
 const housingApi = {
   async list(): Promise<ApiResponse<Housing[]>> {
     try {
-      const { data, status } = await api.get<Housing[]>(
-        "http://localhost:5000/api/housings/view",
-      );
+      const { data, status } = await api.get<Housing[]>("/housings/view");
       const housings: Housing[] = Array.isArray(data) ? data : [];
 
       // Fetch accepted reservations for each housing to determine reserved status
       const withStatus = await Promise.all(
         housings.map(async (h) => {
           try {
-            const { data: reservations } = await axios.get(
-              `http://localhost:5000/api/reservations/housing/${h.id}`,
+            const { data: reservations } = await api.get(
+              `/reservations/housing/${h.id}`,
               { headers: getAuthHeaders() },
             );
             const accepted = (reservations as any[]).find(
@@ -277,7 +276,7 @@ const housingApi = {
     try {
       const fd = await buildFormData(data);
       const { data: res, status } = await api.post<{ housing: Housing }>(
-        "http://localhost:5000/api/housings/new",
+        "/housings/new",
         fd,
         {
           headers: { "Content-Type": "multipart/form-data" },
@@ -299,7 +298,7 @@ const housingApi = {
     try {
       const fd = await buildFormData(data);
       const { data: res, status } = await api.put<{ housing: Housing }>(
-        `http://localhost:5000/api/housings/${id}`,
+        `/housings/${id}`,
         fd,
         {
           headers: { "Content-Type": "multipart/form-data" },
@@ -317,7 +316,7 @@ const housingApi = {
   async remove(id: string): Promise<ApiResponse<{ id: string }>> {
     try {
       const { data, status } = await api.delete<{ id: string }>(
-        `http://localhost:5000/api/housings/${id}`,
+        `/housings/${id}`,
       );
       return ok(data, status);
     } catch (err: any) {
@@ -330,8 +329,8 @@ const housingApi = {
 
   async completeReservation(reservationId: string): Promise<ApiResponse<any>> {
     try {
-      const { data, status } = await axios.patch(
-        `http://localhost:5000/api/reservations/${reservationId}/complete`,
+      const { data, status } = await api.patch(
+        `/reservations/${reservationId}/complete`,
         {},
         { headers: getAuthHeaders() },
       );
@@ -399,8 +398,6 @@ function HousingCard({
   isCompleting: boolean;
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const BACKEND_URL = "http://localhost:5000";
-
   const resolveImage = (src: string) =>
     src.startsWith("http") || src.startsWith("data:")
       ? src
@@ -1176,14 +1173,13 @@ function GuestPreviewOverlay({ total }: { total: number }) {
 function GuestBanner() {
   const [previewHousings, setPreviewHousings] = useState<Housing[]>([]);
   const [loadingPreview, setLoadingPreview] = useState(true);
-  const BACKEND_URL = "http://localhost:5000";
   const totalHousings = previewHousings.length;
 
   useEffect(() => {
     const load = async () => {
       try {
         const { data } = await axios.get<Housing[]>(
-          "http://localhost:5000/api/housingSearch/search",
+          `${API_BASE}/housingSearch/search`,
         );
         setPreviewHousings(Array.isArray(data) ? data.slice(0, 6) : []);
       } catch {
