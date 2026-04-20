@@ -223,7 +223,6 @@ const HOUSING_LABELS: Record<string, string> = {
   CHALET: "Chalet",
 };
 
-const BACKEND_URL =
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function timeAgo(dateStr: string): string {
