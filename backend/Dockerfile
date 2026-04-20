@@ -5,9 +5,13 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
+COPY prisma ./prisma
+COPY .env.example .env 2>/dev/null || echo ""
+ARG DATABASE_URL="postgresql://user:password@localhost/db"
+ENV DATABASE_URL=$DATABASE_URL
+RUN npx prisma generate || true
+
 COPY . .
-ENV DATABASE_URL="postgresql://user:password@localhost/db"
-RUN npx prisma generate
 RUN npm run build
 
 # Runtime stage
