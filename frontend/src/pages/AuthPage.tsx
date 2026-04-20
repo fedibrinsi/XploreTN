@@ -22,7 +22,7 @@ export default function AuthPage() {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const BACKEND_URL = "http://localhost:5000";
+  const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
   // Login form state
   const [loginData, setLoginData] = useState({ email: "", password: "" });
 
