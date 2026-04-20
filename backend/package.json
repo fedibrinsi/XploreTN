@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "prisma generate && tsx src/index.ts",
-    "build": "tsc --skipLibCheck --noImplicitAny false",
+    "build": "tsc",
     "start": "node dist/index.js"
   },
   "keywords": [],

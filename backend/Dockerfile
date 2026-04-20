@@ -6,10 +6,9 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY prisma ./prisma
-COPY .env.example .env 2>/dev/null || echo ""
 ARG DATABASE_URL="postgresql://user:password@localhost/db"
 ENV DATABASE_URL=$DATABASE_URL
-RUN npx prisma generate || true
+RUN npx prisma generate
 
 COPY . .
 RUN npm run build
