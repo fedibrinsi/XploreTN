@@ -6,6 +6,7 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
+ENV DATABASE_URL="postgresql://user:password@localhost/db"
 RUN npx prisma generate
 RUN npm run build
 

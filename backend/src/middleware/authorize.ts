@@ -1,6 +1,6 @@
 import { Response, NextFunction } from "express";
 import type { AuthRequest } from "./auth.js";
-import type { Role } from "@prisma/client";
+import type { Role } from ".prisma/client";
 
 /**
  * Role-based authorization middleware.

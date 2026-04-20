@@ -8,8 +8,8 @@ import * as activityService from "../services/activity.service.js";
 import type {
   ActivityCategory,
   ActivityStatus,
-} from "@prisma/client";
-import { Prisma } from "@prisma/client";
+} from ".prisma/client";
+import { Prisma } from ".prisma/client";
 
 /**
  * ════════════════════════════════════════════════════════════════════════════
@@ -60,7 +60,8 @@ type UpdateActivityBody = Partial<CreateActivityBody>;
  */
 function handlePrismaError(err: unknown, res: Response, context: string): void {
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
-    switch (err.code) {
+    const prismaErr = err as Prisma.PrismaClientKnownRequestError;
+    switch (prismaErr.code) {
       case "P2002":
         // Unique constraint violation
         res.status(409).json({
@@ -73,7 +74,7 @@ function handlePrismaError(err: unknown, res: Response, context: string): void {
         return;
       default:
         res.status(400).json({
-          message: `${context}: database error (${err.code})`,
+          message: `${context}: database error (${prismaErr.code})`,
         });
         return;
     }

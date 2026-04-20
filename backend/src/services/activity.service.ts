@@ -3,7 +3,7 @@ import type {
   Prisma,
   ActivityCategory,
   ActivityStatus,
-} from "@prisma/client";
+} from ".prisma/client";
 import type {
   CreateActivityInput,
   UpdateActivityInput,
