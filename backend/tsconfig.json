@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "rootDir": ".", // to avoid rootDir errors during build
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "rootDir": "src",
     "outDir": "./dist",
     "strict": false,
     "skipLibCheck": true,
